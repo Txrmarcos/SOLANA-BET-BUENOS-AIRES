@@ -121,84 +121,98 @@ export default function OpenBets() {
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
-            Open Pools
-          </h2>
-          <p className="text-sm text-[#A1A1AA]">Browse and join active pools</p>
-        </div>
-        <button
-          onClick={loadOpenBets}
-          disabled={loading}
-          className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold text-sm rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-500/20"
-        >
-          {loading ? "Loading..." : "Refresh"}
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-          <p className="text-[#A1A1AA] text-sm">Loading pools...</p>
-        </div>
-      ) : bets.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-5xl mb-3">📋</div>
-          <p className="text-[#A1A1AA] text-sm">No open pools found</p>
-        </div>
-      ) : (
-      <div className="space-y-3">
-        {bets.map((bet) => (
-          <div
-            key={bet.address}
-            className="bg-white/[0.02] rounded-xl p-5 border border-white/[0.06] hover:border-purple-500/30 transition-all group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-mono text-[#71717A]">
-                {bet.address.slice(0, 8)}...{bet.address.slice(-8)}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => copyShareLink(bet.address)}
-                  className="px-3 py-1.5 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs rounded-lg transition-all"
-                >
-                  Copy Link
-                </button>
-                <button
-                  onClick={() => joinBet(bet.address)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold text-xs rounded-lg transition-all shadow-lg shadow-purple-500/20"
-                >
-                  Join
-                </button>
-              </div>
+    <div className="bg-gradient-to-br from-[#0f0f1e] to-[#1a1a2e] border-4 border-purple-500/30 rounded-2xl p-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-5"></div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-center flex-1">
+            <div className="inline-block mb-2">
+              <span className="text-5xl">🗺️</span>
             </div>
-
-            <div className="grid grid-cols-4 gap-4 text-xs">
-              <div>
-                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Entry</p>
-                <p className="text-white font-semibold">{bet.minDeposit.toFixed(2)} SOL</p>
-              </div>
-              <div>
-                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Pool</p>
-                <p className="text-white font-semibold">{bet.totalPool.toFixed(2)} SOL</p>
-              </div>
-              <div>
-                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Players</p>
-                <p className="text-white font-semibold">{bet.playerCount}<span className="text-[#71717A]">/100</span></p>
-              </div>
-              <div>
-                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Lock</p>
-                <p className="text-white font-semibold">
-                  {new Date(bet.lockTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            </div>
+            <h2 className="text-3xl pixel-font text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-1"
+                style={{ textShadow: "3px 3px 0px #000" }}>
+              ACTIVE DUNGEONS
+            </h2>
+            <p className="text-sm pixel-font text-purple-300">Choose your quest</p>
           </div>
-        ))}
+          <button
+            onClick={loadOpenBets}
+            disabled={loading}
+            className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white pixel-font text-xs rounded-lg transition-all disabled:opacity-50 shadow-lg border-2 border-purple-400"
+          >
+            {loading ? "LOADING..." : "🔄 REFRESH"}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+            <p className="text-sm pixel-font text-purple-300">Loading dungeons...</p>
+          </div>
+        ) : bets.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📭</div>
+            <p className="pixel-font text-purple-300">NO ACTIVE DUNGEONS</p>
+            <p className="text-sm pixel-font text-cyan-300 mt-2">Create one in the 🔨 tab!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {bets.map((bet) => (
+              <div
+                key={bet.address}
+                className="bg-gradient-to-br from-purple-900/20 to-cyan-900/20 rounded-xl p-5 border-2 border-purple-500/30 hover:border-cyan-500/50 transition-all group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🏰</span>
+                      <p className="text-xs font-mono text-purple-300">
+                        {bet.address.slice(0, 8)}...{bet.address.slice(-8)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => copyShareLink(bet.address)}
+                        className="px-3 py-1.5 bg-black/50 hover:bg-black/70 border-2 border-purple-500/50 text-purple-300 pixel-font text-[10px] rounded-lg transition-all"
+                      >
+                        📋 COPY
+                      </button>
+                      <button
+                        onClick={() => joinBet(bet.address)}
+                        className="px-4 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white pixel-font text-[10px] rounded-lg transition-all shadow-lg border-2 border-green-400"
+                      >
+                        ⚔️ ENTER
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4 text-xs">
+                    <div className="bg-black/30 rounded-lg p-2 border border-purple-500/20">
+                      <p className="text-purple-300 mb-1 pixel-font text-[10px]">💰 ENTRY</p>
+                      <p className="text-white pixel-font text-sm">{bet.minDeposit.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-black/30 rounded-lg p-2 border border-cyan-500/20">
+                      <p className="text-cyan-300 mb-1 pixel-font text-[10px]">🏆 POOL</p>
+                      <p className="text-white pixel-font text-sm">{bet.totalPool.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-black/30 rounded-lg p-2 border border-yellow-500/20">
+                      <p className="text-yellow-300 mb-1 pixel-font text-[10px]">👥 PLAYERS</p>
+                      <p className="text-white pixel-font text-sm">{bet.playerCount}<span className="text-purple-300">/100</span></p>
+                    </div>
+                    <div className="bg-black/30 rounded-lg p-2 border border-green-500/20">
+                      <p className="text-green-300 mb-1 pixel-font text-[10px]">⏰ LOCK</p>
+                      <p className="text-white pixel-font text-sm">
+                        {new Date(bet.lockTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      )}
     </div>
   );
 }
