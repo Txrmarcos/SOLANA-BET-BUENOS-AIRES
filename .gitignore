@@ -1,15 +1,7 @@
-# Vercel
-.vercel
-
-# Anchor
 .anchor
+.DS_Store
 target
 **/*.rs.bk
-test-ledger
-
-# Node
 node_modules
+test-ledger
 .yarn
-
-# OS
-.DS_Store

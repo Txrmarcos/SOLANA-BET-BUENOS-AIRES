@@ -6,7 +6,6 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { PROGRAM_ID } from "@/lib/anchor";
 import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import { getExplorerAddressUrl } from "@/lib/explorer";
 
 const TOTAL_BLOCKS = 25;
@@ -19,14 +18,12 @@ interface PoolInfo {
   lockTime: number;
   winnerBlock?: number;
   myChosenBlock?: number;
-  hasClaimed?: boolean;
-  isAutomatic?: boolean;
 }
 
 export default function ManageBet() {
   const { connection } = useConnection();
   const { connected, publicKey } = useWallet();
-  const { revealWinner, autoRevealWinner, cancelBet, getBetData, claimWinnings } = useBlockBattle();
+  const { revealWinner, cancelBet, getBetData, claimWinnings } = useBlockBattle();
 
   const [loading, setLoading] = useState(false);
   const [searchingPools, setSearchingPools] = useState(false);
@@ -92,12 +89,6 @@ export default function ManageBet() {
           offset += 1;
 
           const playerCount = data.readUInt8(offset);
-          offset += 1;
-
-          // Skip bump
-          offset += 1;
-
-          const isAutomatic = data.readUInt8(offset) === 1;
 
           const statusStr = status === 0 ? 'open' : status === 1 ? 'revealed' : 'cancelled';
 
@@ -108,7 +99,6 @@ export default function ManageBet() {
             status: statusStr,
             lockTime,
             winnerBlock,
-            isAutomatic,
           });
         } catch (err) {
           console.error("Error parsing pool:", err);
@@ -159,7 +149,6 @@ export default function ManageBet() {
             // User is a player in this pool
             const myBlock = betData.chosenBlocks[playerIndex];
             const status = Object.keys(betData.status)[0];
-            const hasClaimed = betData.claimed[playerIndex];
 
             joined.push({
               address: account.pubkey.toBase58(),
@@ -169,10 +158,9 @@ export default function ManageBet() {
               lockTime: betData.lockTime.toNumber(),
               winnerBlock: betData.winnerBlock,
               myChosenBlock: myBlock,
-              hasClaimed,
             });
 
-            console.log(`✅ Found pool ${account.pubkey.toBase58().slice(0, 8)}... - You chose block ${myBlock} - Claimed: ${hasClaimed}`);
+            console.log(`✅ Found pool ${account.pubkey.toBase58().slice(0, 8)}... - You chose block ${myBlock}`);
           }
         } catch (err) {
           console.error("Error parsing joined pool:", err);
@@ -229,22 +217,6 @@ export default function ManageBet() {
     }
   };
 
-  const handleAutoReveal = async () => {
-    if (!selectedPool) return;
-
-    setLoading(true);
-    try {
-      const betPDA = new PublicKey(selectedPool);
-      await autoRevealWinner(betPDA);
-      await loadPoolDetails(selectedPool);
-      await findMyPools(); // Refresh list
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCancel = async () => {
     if (!selectedPool) return;
 
@@ -294,124 +266,41 @@ export default function ManageBet() {
   const isArbiter = poolDetails && publicKey && poolDetails.arbiter.toBase58() === publicKey.toBase58();
 
   return (
-    <div className="space-y-8">
-      {/* Header Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative"
-      >
-        {/* Atmospheric glow */}
-        <div className="absolute -inset-2 bg-gradient-to-r from-purple-600/30 via-yellow-600/30 to-purple-600/30 rounded-[2.5rem] blur-3xl" />
-
-        <div className="relative bg-gradient-to-br from-[#0a0a15] via-[#15152a] to-[#0a0a15] rounded-[2.5rem] p-10 overflow-hidden border-2 border-yellow-500/40 shadow-[inset_0_2px_20px_rgba(0,0,0,0.8),0_0_40px_rgba(234,179,8,0.15)]">
-          {/* Texture overlay */}
-          <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.08] mix-blend-overlay" />
-
-          {/* Floating particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(10)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-yellow-400/30 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -40, 0],
-                  opacity: [0, 0.8, 0],
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              />
-            ))}
-          </div>
-
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <motion.div
-                className="text-7xl"
-                animate={{
-                  rotate: [0, -5, 5, 0],
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                👑
-              </motion.div>
-              <div>
-                <motion.h2
-                  className="text-4xl md:text-5xl pixel-font mb-2"
-                  style={{
-                    background: "linear-gradient(135deg, #eab308 0%, #f59e0b 50%, #eab308 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    filter: "drop-shadow(0 0 20px rgba(234, 179, 8, 0.5))",
-                  }}
-                >
-                  DUNGEON MASTER
-                </motion.h2>
-                <p className="text-sm pixel-font text-purple-300/80">Command your realm & reveal treasures</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-[#0f0f1e] to-[#1a1a2e] border-4 border-purple-500/30 rounded-2xl p-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-5"></div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <div className="inline-block mb-2">
+                <span className="text-5xl">👑</span>
               </div>
+              <h2 className="text-3xl pixel-font text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-1"
+                  style={{ textShadow: "3px 3px 0px #000" }}>
+                DUNGEON MASTER
+              </h2>
+              <p className="text-sm pixel-font text-purple-300">Manage your quests & reveal treasures</p>
             </div>
-
-            <motion.button
+            <button
               onClick={refreshAll}
               disabled={searchingPools}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white pixel-font text-xs rounded-2xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(168,85,247,0.3)] border-2 border-purple-400/50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white pixel-font text-xs rounded-xl transition-all border-2 border-purple-400 shadow-lg"
             >
               {searchingPools ? "LOADING..." : "🔄 REFRESH"}
-            </motion.button>
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* My Pools Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative"
-      >
-        <div className="absolute -inset-1 bg-gradient-to-b from-purple-600/20 via-cyan-600/20 to-purple-600/20 rounded-[2rem] blur-2xl" />
-
-        <div className="relative bg-gradient-to-br from-[#08080f]/95 via-[#0f0f1a]/95 to-[#08080f]/95 rounded-[2rem] p-8 border-2 border-purple-500/30 shadow-[inset_0_4px_30px_rgba(0,0,0,0.9),0_0_50px_rgba(139,92,246,0.1)] backdrop-blur-sm">
-          <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.04]" />
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-8">
-              <motion.span
-                className="text-4xl"
-                animate={{
-                  rotate: [0, -5, 5, 0],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                🏰
-              </motion.span>
-              <h3 className="text-2xl pixel-font" style={{
-                background: "linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                filter: "drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))",
-              }}>
-                YOUR DUNGEONS
-              </h3>
-            </div>
+      <div className="bg-gradient-to-br from-[#0f0f1e] to-[#1a1a2e] border-4 border-purple-500/30 rounded-2xl p-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-5"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">🏰</span>
+            <h3 className="text-xl pixel-font text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">YOUR DUNGEONS</h3>
+          </div>
 
           {searchingPools ? (
             <div className="text-center py-12">
@@ -425,150 +314,72 @@ export default function ManageBet() {
               <p className="text-sm pixel-font text-cyan-300">Forge one in the 🔨 tab!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {myPools.map((pool, index) => (
-                <motion.button
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myPools.map((pool) => (
+                <button
                   key={pool.address}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
                   onClick={() => loadPoolDetails(pool.address)}
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative group"
-                >
-                  {/* Hover glow */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600/0 via-cyan-600/0 to-purple-600/0 group-hover:from-purple-600/40 group-hover:via-cyan-600/40 group-hover:to-purple-600/40 rounded-[1.5rem] blur-lg transition-all duration-500" />
-
-                  {/* Card content */}
-                  <div className={`relative bg-gradient-to-br from-[#0a0a15]/90 via-[#12121f]/90 to-[#0a0a15]/90 rounded-[1.5rem] p-6 border-2 transition-all duration-300 backdrop-blur-sm shadow-[inset_0_1px_10px_rgba(0,0,0,0.8),0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden text-left ${
+                  className={`p-5 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${
                     selectedPool === pool.address
-                      ? "border-cyan-500/60 shadow-[0_0_30px_rgba(6,182,212,0.4)]"
-                      : "border-purple-500/30 group-hover:border-cyan-500/50"
-                  }`}>
-                    {/* Texture */}
-                    <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.04] group-hover:opacity-[0.08] transition-opacity" />
+                      ? "bg-gradient-to-br from-purple-500/30 to-cyan-500/30 border-cyan-500 shadow-lg shadow-cyan-500/50"
+                      : "bg-gradient-to-br from-purple-900/20 to-cyan-900/20 border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/30"
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-3">
+                      <span className={`px-3 py-1 rounded-full pixel-font text-[10px] border-2 ${
+                        pool.status === 'open' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' :
+                        pool.status === 'revealed' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
+                        'bg-red-500/20 text-red-400 border-red-500/50'
+                      }`}>
+                        {pool.status.toUpperCase()}
+                      </span>
+                    </div>
 
-                    {/* Animated shimmer */}
-                    <motion.div
-                      className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-purple-500/5 to-transparent"
-                      animate={{
-                        x: ['-200%', '200%'],
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "linear",
-                        repeatDelay: 4,
-                      }}
-                    />
-
-                    <div className="relative z-10">
-                      {/* Status badge */}
-                      <div className="flex items-start justify-between mb-4">
-                        <motion.span
-                          className={`px-4 py-1.5 rounded-full pixel-font text-[10px] border-2 font-bold ${
-                            pool.status === 'open' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' :
-                            pool.status === 'revealed' ? 'bg-green-500/20 text-green-300 border-green-500/50' :
-                            'bg-red-500/20 text-red-300 border-red-500/50'
-                          }`}
-                          animate={{ scale: pool.status === 'open' ? [1, 1.05, 1] : 1 }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          {pool.status.toUpperCase()}
-                        </motion.span>
-
-                        {pool.isAutomatic !== undefined && (
-                          <span className={`text-2xl ${pool.isAutomatic ? '' : ''}`}>
-                            {pool.isAutomatic ? '⚡' : '👑'}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Pool amount - prominent */}
-                      <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-2xl p-4 border-2 border-yellow-500/30 mb-4 shadow-lg">
-                        <p className="text-xs pixel-font text-yellow-400/80 mb-1">💰 TOTAL POOL</p>
-                        <p className="text-white pixel-font text-xl font-bold">
+                    <div className="space-y-3">
+                      <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/20">
+                        <p className="text-xs pixel-font text-yellow-300 mb-1">💰 TOTAL POOL</p>
+                        <p className="text-white pixel-font text-lg">
                           {pool.totalPool.toFixed(4)} SOL
                         </p>
                       </div>
 
-                      {/* Stats row */}
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="flex-1 bg-black/40 rounded-xl p-3 border border-purple-500/20">
-                          <p className="text-[9px] pixel-font text-purple-400 mb-0.5">👥 PLAYERS</p>
-                          <p className="text-white pixel-font text-sm font-bold">{pool.playerCount}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="bg-black/30 rounded-lg p-2 border border-purple-500/20 flex-1">
+                          <p className="text-[10px] pixel-font text-purple-300">👥 PLAYERS</p>
+                          <p className="text-white pixel-font text-sm">{pool.playerCount}</p>
                         </div>
                         {pool.winnerBlock && (
-                          <div className="flex-1 bg-black/40 rounded-xl p-3 border border-green-500/30">
-                            <p className="text-[9px] pixel-font text-green-400 mb-0.5">🏆 WINNER</p>
-                            <p className="text-green-300 pixel-font text-sm font-bold">#{pool.winnerBlock}</p>
+                          <div className="bg-black/30 rounded-lg p-2 border border-green-500/20 flex-1">
+                            <p className="text-[10px] pixel-font text-green-300">🏆 WINNER</p>
+                            <p className="text-white pixel-font text-sm">#{pool.winnerBlock}</p>
                           </div>
                         )}
                       </div>
+                    </div>
 
-                      {/* Address and Explorer Link */}
-                      <div className="pt-3 border-t border-purple-500/20 flex items-center justify-between gap-2">
-                        <p className="text-[9px] text-purple-400/70 font-mono truncate">
-                          {pool.address.slice(0, 8)}...{pool.address.slice(-8)}
-                        </p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(getExplorerAddressUrl(pool.address), "_blank");
-                          }}
-                          className="px-2 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 border border-cyan-500/30 text-cyan-300 rounded text-[8px] pixel-font transition-all"
-                          title="View on Explorer"
-                        >
-                          🔍
-                        </button>
-                      </div>
+                    <div className="mt-3 pt-3 border-t border-purple-500/30">
+                      <p className="text-[10px] text-purple-300 font-mono truncate">
+                        {pool.address.slice(0, 8)}...{pool.address.slice(-8)}
+                      </p>
                     </div>
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
           )}
         </div>
       </div>
-      </motion.div>
 
       {/* Joined Pools Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="relative"
-      >
-        <div className="absolute -inset-1 bg-gradient-to-b from-cyan-600/20 via-emerald-600/20 to-cyan-600/20 rounded-[2rem] blur-2xl" />
-
-        <div className="relative bg-gradient-to-br from-[#08080f]/95 via-[#0f0f1a]/95 to-[#08080f]/95 rounded-[2rem] p-8 border-2 border-cyan-500/30 shadow-[inset_0_4px_30px_rgba(0,0,0,0.9),0_0_50px_rgba(6,182,212,0.1)] backdrop-blur-sm">
-          <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.04]" />
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-8">
-              <motion.span
-                className="text-4xl"
-                animate={{
-                  rotate: [0, 10, -10, 0],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                🎯
-              </motion.span>
-              <h3 className="text-2xl pixel-font" style={{
-                background: "linear-gradient(135deg, #06b6d4 0%, #10b981 50%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                filter: "drop-shadow(0 0 15px rgba(6, 182, 212, 0.4))",
-              }}>
-                YOUR QUESTS
-              </h3>
-            </div>
+      <div className="bg-gradient-to-br from-[#0f0f1e] to-[#1a1a2e] border-4 border-cyan-500/30 rounded-2xl p-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-5"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">🎯</span>
+            <h3 className="text-xl pixel-font text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">YOUR QUESTS</h3>
+          </div>
 
           {searchingPools ? (
             <div className="text-center py-12">
@@ -582,207 +393,105 @@ export default function ManageBet() {
               <p className="text-sm pixel-font text-purple-300">Browse dungeons in the 🗺️ tab!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {joinedPools.map((pool, index) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {joinedPools.map((pool) => {
                 const didWin = pool.status === 'revealed' && pool.winnerBlock === pool.myChosenBlock;
 
                 return (
-                  <motion.div
+                  <div
                     key={pool.address}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02, y: -4 }}
-                    className="relative group"
-                  >
-                    {/* Victory glow */}
-                    {didWin && (
-                      <motion.div
-                        className="absolute -inset-1 bg-gradient-to-r from-green-500/50 via-emerald-500/50 to-green-500/50 rounded-[1.5rem] blur-lg"
-                        animate={{
-                          opacity: [0.5, 0.8, 0.5],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    )}
-
-                    {/* Card content */}
-                    <div className={`relative bg-gradient-to-br from-[#0a0a15]/90 via-[#12121f]/90 to-[#0a0a15]/90 rounded-[1.5rem] p-6 border-2 transition-all duration-300 backdrop-blur-sm shadow-[inset_0_1px_10px_rgba(0,0,0,0.8),0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden ${
+                    className={`p-5 rounded-xl border-2 transition-all relative overflow-hidden group ${
                       didWin
-                        ? "border-green-500/60 shadow-[0_0_30px_rgba(16,185,129,0.5)]"
-                        : "border-cyan-500/30 group-hover:border-cyan-500/50"
-                    }`}>
-                      {/* Texture */}
-                      <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.04] group-hover:opacity-[0.08] transition-opacity" />
+                        ? "bg-gradient-to-br from-green-500/30 to-emerald-500/30 border-green-500 shadow-lg shadow-green-500/50"
+                        : "bg-gradient-to-br from-cyan-900/20 to-purple-900/20 border-cyan-500/30"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between mb-3">
+                        <span className={`px-3 py-1 rounded-full pixel-font text-[10px] border-2 ${
+                          pool.status === 'open' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' :
+                          pool.status === 'revealed' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
+                          'bg-red-500/20 text-red-400 border-red-500/50'
+                        }`}>
+                          {pool.status.toUpperCase()}
+                        </span>
+                        {didWin && (
+                          <span className="px-3 py-1 rounded-full pixel-font text-[10px] bg-yellow-500/30 text-yellow-300 border-2 border-yellow-500 shadow-lg animate-pulse">
+                            🏆 VICTORY
+                          </span>
+                        )}
+                      </div>
 
-                      {/* Victory shine */}
-                      {didWin && (
-                        <motion.div
-                          className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-green-400/10 to-transparent"
-                          animate={{
-                            x: ['-200%', '200%'],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "linear",
-                            repeatDelay: 1,
-                          }}
-                        />
-                      )}
-
-                      <div className="relative z-10">
-                        {/* Status badges */}
-                        <div className="flex items-start justify-between mb-4">
-                          <motion.span
-                            className={`px-4 py-1.5 rounded-full pixel-font text-[10px] border-2 font-bold ${
-                              pool.status === 'open' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' :
-                              pool.status === 'revealed' ? 'bg-green-500/20 text-green-300 border-green-500/50' :
-                              'bg-red-500/20 text-red-300 border-red-500/50'
-                            }`}
-                            animate={{ scale: pool.status === 'revealed' ? [1, 1.05, 1] : 1 }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            {pool.status.toUpperCase()}
-                          </motion.span>
-                          {didWin && (
-                            <motion.span
-                              className="px-3 py-1.5 rounded-full pixel-font text-[10px] bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-yellow-200 border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] font-bold"
-                              animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 5, 0] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              🏆 VICTORY
-                            </motion.span>
-                          )}
-                        </div>
-
-                        {/* Prize pool - prominent */}
-                        <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-2xl p-4 border-2 border-yellow-500/30 mb-4 shadow-lg">
-                          <p className="text-xs pixel-font text-yellow-400/80 mb-1">💰 PRIZE POOL</p>
-                          <p className="text-white pixel-font text-xl font-bold">
+                      <div className="space-y-3">
+                        <div className="bg-black/30 rounded-lg p-3 border border-yellow-500/20">
+                          <p className="text-xs pixel-font text-yellow-300 mb-1">💰 PRIZE POOL</p>
+                          <p className="text-white pixel-font text-lg">
                             {pool.totalPool.toFixed(4)} SOL
                           </p>
                         </div>
 
-                        {/* Door comparison */}
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="flex-1 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-2xl p-3 border-2 border-cyan-500/40 text-center shadow-lg">
-                            <p className="text-[9px] pixel-font text-cyan-400 mb-1">🚪 YOUR DOOR</p>
-                            <p className="text-cyan-300 pixel-font text-3xl font-bold">{pool.myChosenBlock}</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="bg-black/30 rounded-lg p-3 border border-cyan-500/30 flex-1 text-center">
+                            <p className="text-[10px] pixel-font text-cyan-300 mb-1">🚪 YOUR DOOR</p>
+                            <p className="text-cyan-400 pixel-font text-2xl font-bold">{pool.myChosenBlock}</p>
                           </div>
                           {pool.winnerBlock && (
-                            <>
-                              <motion.div
-                                className="text-2xl"
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                {didWin ? '✨' : '💔'}
-                              </motion.div>
-                              <div className={`flex-1 bg-gradient-to-br rounded-2xl p-3 border-2 text-center shadow-lg ${
-                                didWin
-                                  ? 'from-green-600/20 to-emerald-600/20 border-green-500/40'
-                                  : 'from-red-600/20 to-orange-600/20 border-red-500/40'
+                            <div className={`bg-black/30 rounded-lg p-3 border flex-1 text-center ${
+                              didWin ? 'border-green-500/50' : 'border-red-500/30'
+                            }`}>
+                              <p className="text-[10px] pixel-font mb-1" style={{ color: didWin ? '#4ade80' : '#f87171' }}>
+                                {didWin ? '🏆 WINNER' : '❌ WINNER'}
+                              </p>
+                              <p className={`pixel-font text-2xl font-bold ${
+                                didWin ? 'text-green-400' : 'text-red-400'
                               }`}>
-                                <p className={`text-[9px] pixel-font mb-1 ${didWin ? 'text-green-400' : 'text-red-400'}`}>
-                                  {didWin ? '🏆 WINNER' : '❌ WINNER'}
-                                </p>
-                                <p className={`pixel-font text-3xl font-bold ${
-                                  didWin ? 'text-green-300' : 'text-red-400'
-                                }`}>
-                                  {pool.winnerBlock}
-                                </p>
-                              </div>
-                            </>
+                                {pool.winnerBlock}
+                              </p>
+                            </div>
                           )}
                         </div>
 
-                        {/* Player count badge */}
-                        <div className="bg-black/40 rounded-xl p-2 border border-purple-500/20 mb-3 text-center">
-                          <p className="text-[10px] pixel-font text-purple-400">
-                            👥 <span className="text-white font-bold">{pool.playerCount}</span> ADVENTURERS
-                          </p>
-                        </div>
-
-                        {/* Claim section */}
-                        {didWin && (
-                          pool.hasClaimed ? (
-                            <motion.div
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              className="bg-gradient-to-r from-gray-700/50 to-gray-600/50 text-gray-300 pixel-font text-sm py-3 rounded-2xl border-2 border-gray-500/50 text-center"
-                            >
-                              ✅ TREASURE CLAIMED
-                            </motion.div>
-                          ) : (
-                            <motion.button
-                              onClick={async () => {
-                                try {
-                                  setLoading(true);
-                                  const betPDA = new PublicKey(pool.address);
-                                  await claimWinnings(betPDA);
-                                  await refreshAll();
-                                  toast.success("Treasure claimed! 🎉");
-                                } catch (error) {
-                                  console.error(error);
-                                } finally {
-                                  setLoading(false);
-                                }
-                              }}
-                              disabled={loading}
-                              whileHover={{ scale: 1.02, y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="relative w-full py-4 rounded-2xl pixel-font text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
-                            >
-                              {/* Animated gradient */}
-                              <motion.div
-                                className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600"
-                                animate={{
-                                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                                }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                style={{ backgroundSize: '200% 200%' }}
-                              />
-                              {/* Border */}
-                              <div className="absolute inset-0 rounded-2xl border-3 border-green-400/60 shadow-[0_0_30px_rgba(16,185,129,0.4)]" />
-                              {/* Content */}
-                              <span className="relative z-10 text-white font-bold flex items-center justify-center gap-2">
-                                {loading ? "CLAIMING..." : "💰 CLAIM TREASURE 💰"}
-                              </span>
-                            </motion.button>
-                          )
-                        )}
-
-                        {/* Address and Explorer Link */}
-                        <div className="mt-4 pt-3 border-t border-cyan-500/20 flex items-center justify-between gap-2">
-                          <p className="text-[9px] text-cyan-400/70 font-mono truncate">
-                            {pool.address.slice(0, 8)}...{pool.address.slice(-8)}
-                          </p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(getExplorerAddressUrl(pool.address), "_blank");
-                            }}
-                            className="px-2 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 border border-cyan-500/30 text-cyan-300 rounded text-[8px] pixel-font transition-all"
-                            title="View on Explorer"
-                          >
-                            🔍
-                          </button>
+                        <div className="bg-black/30 rounded-lg p-2 border border-purple-500/20">
+                          <p className="text-[10px] pixel-font text-purple-300">👥 ADVENTURERS: <span className="text-white">{pool.playerCount}</span></p>
                         </div>
                       </div>
+
+                      {didWin && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              setLoading(true);
+                              const betPDA = new PublicKey(pool.address);
+                              await claimWinnings(betPDA);
+                              await refreshAll();
+                              toast.success("Treasure claimed! 🎉");
+                            } catch (error) {
+                              console.error(error);
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          disabled={loading}
+                          className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white pixel-font text-sm py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg border-4 border-green-400"
+                        >
+                          {loading ? "CLAIMING..." : "💰 CLAIM TREASURE 💰"}
+                        </button>
+                      )}
+
+                      <div className="mt-3 pt-3 border-t border-cyan-500/30">
+                        <p className="text-[10px] text-cyan-300 font-mono truncate">
+                          {pool.address.slice(0, 8)}...{pool.address.slice(-8)}
+                        </p>
+                      </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
           )}
-          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Selected Pool Details */}
       {selectedPool && poolDetails && (
@@ -832,7 +541,7 @@ export default function ManageBet() {
             </div>
 
             {/* Arbiter: Reveal Winner */}
-            {isArbiter && status === 'open' && !poolDetails.isAutomatic && (
+            {isArbiter && status === 'open' && (
               <div className="space-y-4">
                 <div className="bg-green-500/20 border-2 border-green-500 rounded-xl p-4 mb-4 text-center">
                   <span className="text-2xl">👑</span>
@@ -867,46 +576,6 @@ export default function ManageBet() {
                 </button>
                 {poolDetails.playerCount < 2 && (
                   <p className="text-sm pixel-font text-red-400 text-center animate-pulse">⚠️ NEED 2+ PLAYERS TO REVEAL</p>
-                )}
-              </div>
-            )}
-
-            {/* Automatic: Auto Reveal */}
-            {status === 'open' && poolDetails.isAutomatic && (
-              <div className="space-y-4">
-                <div className="bg-cyan-500/20 border-2 border-cyan-500 rounded-xl p-4 mb-4 text-center">
-                  <span className="text-2xl">⚡</span>
-                  <p className="text-cyan-300 pixel-font text-sm mt-2">AUTOMATIC MODE</p>
-                  <p className="text-cyan-400 pixel-font text-xs mt-1">
-                    {Math.floor(Date.now() / 1000) >= poolDetails.lockTime.toNumber()
-                      ? "READY TO AUTO-REVEAL!"
-                      : `Auto-reveals at ${new Date(poolDetails.lockTime.toNumber() * 1000).toLocaleString()}`}
-                  </p>
-                </div>
-
-                {Math.floor(Date.now() / 1000) >= poolDetails.lockTime.toNumber() ? (
-                  <>
-                    <button
-                      onClick={handleAutoReveal}
-                      disabled={loading || poolDetails.playerCount < 2}
-                      className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white pixel-font text-lg py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg border-4 border-cyan-400"
-                    >
-                      {loading ? "REVEALING..." : "⚡ AUTO-REVEAL WINNER ⚡"}
-                    </button>
-                    {poolDetails.playerCount < 2 && (
-                      <p className="text-sm pixel-font text-red-400 text-center animate-pulse">⚠️ NEED 2+ PLAYERS TO REVEAL</p>
-                    )}
-                    <p className="text-xs pixel-font text-cyan-300 text-center">
-                      Anyone can trigger auto-reveal after lock time
-                    </p>
-                  </>
-                ) : (
-                  <div className="bg-black/30 rounded-xl p-4 border border-cyan-500/30 text-center">
-                    <p className="text-cyan-300 pixel-font text-sm">⏰ Waiting for lock time...</p>
-                    <p className="text-white pixel-font text-xl mt-2">
-                      {new Date(poolDetails.lockTime.toNumber() * 1000).toLocaleTimeString()}
-                    </p>
-                  </div>
                 )}
               </div>
             )}
