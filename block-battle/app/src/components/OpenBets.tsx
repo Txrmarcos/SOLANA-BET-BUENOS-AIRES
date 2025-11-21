@@ -117,88 +117,83 @@ export default function OpenBets() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-2xl p-6 shadow-lg">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">🎰</span>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Open Bets</h2>
-            <p className="text-sm text-gray-400">Join an existing battle</p>
-          </div>
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
+            Open Pools
+          </h2>
+          <p className="text-sm text-[#A1A1AA]">Browse and join active pools</p>
         </div>
         <button
           onClick={loadOpenBets}
           disabled={loading}
-          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50"
+          className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold text-sm rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-500/20"
         >
           {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-gray-400">
-          <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-          Loading open bets...
+        <div className="text-center py-12">
+          <div className="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+          <p className="text-[#A1A1AA] text-sm">Loading pools...</p>
         </div>
       ) : bets.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          No open bets found. Create one to get started!
+        <div className="text-center py-12">
+          <div className="text-5xl mb-3">📋</div>
+          <p className="text-[#A1A1AA] text-sm">No open pools found</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {bets.map((bet) => (
-            <div
-              key={bet.address}
-              className="bg-black/30 rounded-xl p-4 border border-gray-700 hover:border-orange-500/50 transition-all"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Bet Address</p>
-                  <p className="text-xs font-mono text-gray-300">
-                    {bet.address.slice(0, 8)}...{bet.address.slice(-8)}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => copyShareLink(bet.address)}
-                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
-                  >
-                    📋 Copy Link
-                  </button>
-                  <button
-                    onClick={() => joinBet(bet.address)}
-                    className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors"
-                  >
-                    Join →
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500 text-xs">Min Deposit</p>
-                  <p className="text-white font-semibold">{bet.minDeposit.toFixed(2)} SOL</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs">Total Pool</p>
-                  <p className="text-white font-semibold">{bet.totalPool.toFixed(2)} SOL</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs">Players</p>
-                  <p className="text-white font-semibold">{bet.playerCount}/100</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs">Lock Time</p>
-                  <p className="text-white font-semibold">
-                    {new Date(bet.lockTime * 1000).toLocaleTimeString()}
-                  </p>
-                </div>
+      <div className="space-y-3">
+        {bets.map((bet) => (
+          <div
+            key={bet.address}
+            className="bg-white/[0.02] rounded-xl p-5 border border-white/[0.06] hover:border-purple-500/30 transition-all group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-mono text-[#71717A]">
+                {bet.address.slice(0, 8)}...{bet.address.slice(-8)}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyShareLink(bet.address)}
+                  className="px-3 py-1.5 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs rounded-lg transition-all"
+                >
+                  Copy Link
+                </button>
+                <button
+                  onClick={() => joinBet(bet.address)}
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold text-xs rounded-lg transition-all shadow-lg shadow-purple-500/20"
+                >
+                  Join
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="grid grid-cols-4 gap-4 text-xs">
+              <div>
+                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Entry</p>
+                <p className="text-white font-semibold">{bet.minDeposit.toFixed(2)} SOL</p>
+              </div>
+              <div>
+                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Pool</p>
+                <p className="text-white font-semibold">{bet.totalPool.toFixed(2)} SOL</p>
+              </div>
+              <div>
+                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Players</p>
+                <p className="text-white font-semibold">{bet.playerCount}<span className="text-[#71717A]">/100</span></p>
+              </div>
+              <div>
+                <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide">Lock</p>
+                <p className="text-white font-semibold">
+                  {new Date(bet.lockTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
       )}
     </div>
   );

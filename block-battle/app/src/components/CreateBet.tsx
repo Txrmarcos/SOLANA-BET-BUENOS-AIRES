@@ -83,29 +83,26 @@ export default function CreateBet() {
 
   if (!connected) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">🔒</div>
-        <h3 className="text-xl font-semibold mb-2">Connect Wallet</h3>
-        <p className="text-gray-400">Connect your wallet to create a bet</p>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+        <div className="text-5xl mb-4">🔒</div>
+        <h3 className="text-xl font-semibold mb-2 text-white">Connect Wallet</h3>
+        <p className="text-[#A1A1AA] text-sm">Connect your wallet to create a pool</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-2xl p-6 shadow-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-          <span className="text-2xl">🎯</span>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white">Create New Bet</h2>
-          <p className="text-sm text-gray-400">Start a new block battle</p>
-        </div>
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
+          Create New Pool
+        </h2>
+        <p className="text-sm text-[#A1A1AA]">Set up a new betting pool</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Minimum Deposit (SOL)
           </label>
           <input
@@ -114,32 +111,32 @@ export default function CreateBet() {
             min="0.01"
             value={formData.minDeposit}
             onChange={(e) => setFormData({ ...formData, minDeposit: e.target.value })}
-            className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white placeholder-[#71717A] focus:outline-none focus:border-purple-500 transition-all"
             placeholder="0.1"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Arbiter Address
           </label>
           <input
             type="text"
             value={formData.arbiter}
             onChange={(e) => setFormData({ ...formData, arbiter: e.target.value })}
-            className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors font-mono text-sm"
+            className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white placeholder-[#71717A] focus:outline-none focus:border-purple-500 transition-all font-mono text-sm"
             placeholder="Public key of the arbiter"
             required
           />
-          <p className="text-xs text-gray-500 mt-1">Who will reveal the winner</p>
+          <p className="text-xs text-[#A1A1AA] mt-2">Who will reveal the winner</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Lock Time (seconds)
           </label>
-          <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-4 gap-2 mb-3">
             {[
               { label: "1min", value: "60" },
               { label: "5min", value: "300" },
@@ -152,8 +149,8 @@ export default function CreateBet() {
                 onClick={() => setFormData({ ...formData, lockTime: preset.value })}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   formData.lockTime === preset.value
-                    ? "bg-purple-500 text-white"
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+                    : "bg-white/[0.03] text-[#A1A1AA] hover:bg-white/[0.06] hover:text-white border border-white/[0.06]"
                 }`}
               >
                 {preset.label}
@@ -165,7 +162,7 @@ export default function CreateBet() {
             min="60"
             value={formData.lockTime}
             onChange={(e) => setFormData({ ...formData, lockTime: e.target.value })}
-            className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white placeholder-[#71717A] focus:outline-none focus:border-purple-500 transition-all"
             required
           />
         </div>
@@ -173,17 +170,17 @@ export default function CreateBet() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/50"
+          className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
         >
-          {loading ? "Creating..." : "Create Bet"}
+          {loading ? "Creating..." : "Create Pool"}
         </button>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
+            <div className="w-full border-t border-white/[0.06]"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-purple-900/20 text-gray-400">or</span>
+            <span className="px-3 bg-[#050509] text-[#71717A]">or</span>
           </div>
         </div>
 
@@ -191,12 +188,12 @@ export default function CreateBet() {
           type="button"
           onClick={handleCancelPrevious}
           disabled={loading}
-          className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-white font-medium py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Cancelling..." : "Cancel Previous Bet"}
+          {loading ? "Cancelling..." : "Cancel Previous Pool"}
         </button>
-        <p className="text-xs text-gray-500 text-center">
-          If you already have an active bet, cancel it first to create a new one
+        <p className="text-xs text-[#71717A] text-center">
+          Cancel your existing pool to create a new one
         </p>
       </form>
     </div>

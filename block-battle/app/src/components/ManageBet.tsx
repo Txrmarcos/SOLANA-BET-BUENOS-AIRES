@@ -88,29 +88,26 @@ export default function ManageBet() {
 
   if (!connected) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">🔒</div>
-        <h3 className="text-xl font-semibold mb-2">Connect Wallet</h3>
-        <p className="text-gray-400">Connect your wallet to manage bets</p>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+        <div className="text-5xl mb-4">🔒</div>
+        <h3 className="text-xl font-semibold mb-2 text-white">Connect Wallet</h3>
+        <p className="text-[#A1A1AA] text-sm">Connect your wallet to manage pools</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded-2xl p-6 shadow-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-          <span className="text-2xl">👑</span>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white">Manage Bet</h2>
-          <p className="text-sm text-gray-400">Reveal winner or claim prizes</p>
-        </div>
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
+          Manage Pool
+        </h2>
+        <p className="text-sm text-[#A1A1AA]">Reveal winner or claim prizes</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Bet Address
             {activeBet && (
               <span className="ml-2 text-xs text-green-400">
@@ -123,12 +120,12 @@ export default function ManageBet() {
               type="text"
               value={betAddress}
               onChange={(e) => setBetAddress(e.target.value)}
-              className="flex-1 px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors font-mono text-sm"
+              className="flex-1 px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white placeholder-[#71717A] focus:outline-none focus:border-purple-500 transition-all font-mono text-sm"
               placeholder="Bet PDA address"
             />
             <button
               onClick={handleLoadBet}
-              className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-colors"
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-purple-500/20"
             >
               Load
             </button>
@@ -137,30 +134,30 @@ export default function ManageBet() {
 
         {betData && (
           <>
-            <div className="bg-black/30 rounded-xl p-4 border border-gray-700 space-y-3">
+            <div className="bg-white/[0.02] rounded-xl p-6 border border-white/[0.06] space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-400">Total Pool</p>
+                  <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide text-xs">Total Pool</p>
                   <p className="text-white font-semibold text-lg">
                     {(betData.totalPool.toNumber() / 1e9).toFixed(4)} SOL
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-400">Players</p>
+                  <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide text-xs">Players</p>
                   <p className="text-white font-semibold text-lg">{betData.playerCount}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400">Status</p>
+                  <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide text-xs">Status</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    status === 'open' ? 'bg-blue-500/20 text-blue-400' :
-                    status === 'revealed' ? 'bg-green-500/20 text-green-400' :
-                    'bg-red-500/20 text-red-400'
+                    status === 'open' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                    status === 'revealed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    'bg-red-500/20 text-red-400 border border-red-500/30'
                   }`}>
                     {status?.toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <p className="text-gray-400">Winner Block</p>
+                  <p className="text-[#A1A1AA] mb-1 uppercase tracking-wide text-xs">Winner Block</p>
                   <p className="text-white font-semibold text-lg">
                     {betData.winnerBlock ? betData.winnerBlock : "Not revealed"}
                   </p>
@@ -168,45 +165,60 @@ export default function ManageBet() {
               </div>
 
               {isArbiter && (
-                <div className="pt-3 border-t border-gray-700">
+                <div className="pt-4 border-t border-white/[0.06]">
                   <p className="text-green-400 text-sm font-medium">✓ You are the arbiter</p>
                 </div>
               )}
 
               {isCreator && (
-                <div className="pt-3 border-t border-gray-700">
-                  <p className="text-blue-400 text-sm font-medium">✓ You created this bet</p>
+                <div className="pt-4 border-t border-white/[0.06]">
+                  <p className="text-cyan-400 text-sm font-medium">✓ You created this bet</p>
                 </div>
               )}
             </div>
 
             {/* Arbiter: Reveal Winner */}
             {isArbiter && status === 'open' && (
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Select Winning Block
-                </label>
-                <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: TOTAL_BLOCKS }, (_, i) => i + 1).map((block) => (
+              <div className="space-y-4">
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6 text-center">
+                  <p className="text-[#A1A1AA] text-sm mb-2">Random Winning Block</p>
+                  {winningBlock !== null ? (
+                    <div className="text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent my-4">
+                      {winningBlock}
+                    </div>
+                  ) : (
+                    <div className="text-6xl font-bold text-[#71717A] my-4">
+                      ?
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const random = Math.floor(Math.random() * TOTAL_BLOCKS) + 1;
+                      setWinningBlock(random);
+                    }}
+                    disabled={loading}
+                    className="flex-1 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {winningBlock !== null ? 'Regenerate' : 'Generate Random'}
+                  </button>
+                  {winningBlock !== null && (
                     <button
-                      key={block}
-                      onClick={() => setWinningBlock(block)}
-                      className={`aspect-square rounded-xl font-bold text-lg transition-all ${
-                        winningBlock === block
-                          ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white scale-105 shadow-lg"
-                          : "bg-gray-800 hover:bg-gray-700 text-gray-300"
-                      }`}
+                      onClick={() => setWinningBlock(null)}
+                      disabled={loading}
+                      className="px-5 py-3 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-[#A1A1AA] hover:text-white font-medium rounded-xl transition-all disabled:opacity-50"
                     >
-                      {block}
+                      Reset
                     </button>
-                  ))}
+                  )}
                 </div>
                 <button
                   onClick={handleReveal}
                   disabled={loading || winningBlock === null}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-green-500/50"
+                  className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
                 >
-                  {loading ? "Revealing..." : winningBlock ? `Reveal Block ${winningBlock} as Winner` : "Select a Block"}
+                  {loading ? "Revealing..." : winningBlock ? `Reveal Block ${winningBlock} as Winner` : "Generate a random block first"}
                 </button>
               </div>
             )}
@@ -216,7 +228,7 @@ export default function ManageBet() {
               <button
                 onClick={handleClaim}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-yellow-500/50"
+                className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
               >
                 {loading ? "Claiming..." : "🏆 Claim Winnings"}
               </button>
@@ -227,9 +239,9 @@ export default function ManageBet() {
               <button
                 onClick={handleCancel}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/50"
+                className="w-full bg-white/[0.03] hover:bg-red-500/10 border border-white/[0.08] hover:border-red-500/30 text-[#A1A1AA] hover:text-red-400 font-medium py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Cancelling..." : "❌ Cancel Bet"}
+                {loading ? "Cancelling..." : "Cancel Bet"}
               </button>
             )}
           </>
