@@ -1,123 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { PROGRAM_ID } from "@/lib/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-
-interface OpenBet {
-  address: string;
-  creator: string;
-  minDeposit: number;
-  totalPool: number;
-  playerCount: number;
-  lockTime: number;
-  isAutomatic: boolean;
-}
+import { useBetsList } from "@/hooks/useBetsList";
 
 export default function OpenBets() {
-  const { connection } = useConnection();
-  const [bets, setBets] = useState<OpenBet[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadOpenBets = async () => {
-    setLoading(true);
-    try {
-      // Get all program accounts (bets)
-      const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [
-          {
-            // Filter for accounts with discriminator for BetAccount
-            dataSize: 8 + 32 + 32 + 8 + 8 + 8 + 2 + 1 + 1 + 1 + 4 + (32 * 100) + 4 + 100 + 4 + (8 * 100) + 4 + 100,
-          },
-        ],
-      });
-
-      const openBets: OpenBet[] = [];
-
-      for (const account of accounts) {
-        try {
-          // Parse account data (simplified - you'd use Anchor deserialization in production)
-          const data = account.account.data;
-
-          // Skip discriminator (8 bytes)
-          let offset = 8;
-
-          // Read creator (32 bytes)
-          const creator = new PublicKey(data.slice(offset, offset + 32));
-          offset += 32;
-
-          // Skip arbiter (32 bytes)
-          offset += 32;
-
-          // Read min_deposit (8 bytes)
-          const minDeposit = Number(data.readBigUInt64LE(offset));
-          offset += 8;
-
-          // Read total_pool (8 bytes)
-          const totalPool = Number(data.readBigUInt64LE(offset));
-          offset += 8;
-
-          // Read lock_time (8 bytes)
-          const lockTime = Number(data.readBigInt64LE(offset));
-          offset += 8;
-
-          // winner_block is Option<u8> - check discriminant
-          const hasWinnerBlock = data.readUInt8(offset);
-          offset += 1;
-          if (hasWinnerBlock) {
-            offset += 1; // skip the value
-          }
-
-          // Read status (1 byte)
-          const status = data.readUInt8(offset);
-          offset += 1;
-
-          // Read player_count (1 byte)
-          const playerCount = data.readUInt8(offset);
-          offset += 1;
-
-          // Skip bump (1 byte)
-          offset += 1;
-
-          // Read is_automatic (1 byte)
-          const isAutomatic = data.readUInt8(offset) === 1;
-
-          // Only show open bets (status = 0)
-          if (status === 0) {
-            openBets.push({
-              address: account.pubkey.toBase58(),
-              creator: creator.toBase58(),
-              minDeposit: minDeposit / 1e9, // Convert to SOL
-              totalPool: totalPool / 1e9,
-              playerCount,
-              lockTime,
-              isAutomatic,
-            });
-          }
-        } catch (err) {
-          console.error("Error parsing bet account:", err);
-        }
-      }
-
-      // Sort by newest first
-      openBets.sort((a, b) => b.lockTime - a.lockTime);
-
-      setBets(openBets);
-      toast.success(`Found ${openBets.length} open bets!`);
-    } catch (error) {
-      console.error("Error loading bets:", error);
-      toast.error("Failed to load open bets");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { bets, loading, error, loadOpenBets, invalidateCache } = useBetsList();
 
   useEffect(() => {
     loadOpenBets();
-  }, []);
+  }, [loadOpenBets]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  const handleRefresh = async () => {
+    invalidateCache();
+    const result = await loadOpenBets(true);
+    if (result) {
+      toast.success(`Encontradas ${result.length} apostas abertas!`);
+    }
+  };
 
   const copyShareLink = (betAddress: string) => {
     const shareUrl = `${window.location.origin}?bet=${betAddress}`;
@@ -145,24 +52,25 @@ export default function OpenBets() {
           {/* Texture overlay */}
           <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.06] mix-blend-overlay" />
 
-          {/* Floating particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(6)].map((_, i) => (
+          {/* Floating particles - REDUZIDO para 3 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
+                className="absolute w-1 h-1 bg-purple-400/30 rounded-full will-change-transform"
                 style={{
-                  left: `${20 + i * 15}%`,
-                  top: `${30 + (i % 3) * 20}%`,
+                  left: `${25 + i * 25}%`,
+                  top: `${35 + i * 15}%`,
                 }}
                 animate={{
-                  y: [0, -40, 0],
-                  opacity: [0, 0.8, 0],
+                  y: [0, -35, 0],
+                  opacity: [0, 0.6, 0],
                 }}
                 transition={{
-                  duration: 4 + i * 0.5,
+                  duration: 4.5,
                   repeat: Infinity,
-                  delay: i * 0.3,
+                  delay: i * 0.8,
+                  ease: "easeInOut",
                 }}
               />
             ))}
@@ -200,13 +108,13 @@ export default function OpenBets() {
             </div>
 
             <motion.button
-              onClick={loadOpenBets}
+              onClick={handleRefresh}
               disabled={loading}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white pixel-font text-xs rounded-2xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(168,85,247,0.3)] border-2 border-purple-400/50 disabled:cursor-not-allowed"
             >
-              {loading ? "LOADING..." : "🔄 REFRESH"}
+              {loading ? "CARREGANDO..." : "🔄 ATUALIZAR"}
             </motion.button>
           </div>
         </div>

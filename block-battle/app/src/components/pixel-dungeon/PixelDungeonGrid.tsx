@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PixelDoor, { DoorState, TrapType } from "./PixelDoor";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,16 +25,15 @@ export default function PixelDungeonGrid({
   playerBlock
 }: PixelDungeonGridProps) {
   const [doorStates, setDoorStates] = useState<Record<number, DoorState>>({});
-  const [trapTypes, setTrapTypes] = useState<Record<number, TrapType>>({});
 
-  // Initialize random trap types for each door
-  useEffect(() => {
+  // Initialize random trap types - OTIMIZADO com useMemo
+  const trapTypes = useMemo(() => {
     const types: Record<number, TrapType> = {};
     for (let i = 1; i <= TOTAL_DOORS; i++) {
       types[i] = TRAP_TYPES[Math.floor(Math.random() * TRAP_TYPES.length)];
     }
-    setTrapTypes(types);
-  }, []);
+    return types;
+  }, []); // Só calcula uma vez
 
   // Update door states based on selection
   useEffect(() => {
@@ -169,24 +168,25 @@ export default function PixelDungeonGrid({
           </motion.div>
         )}
 
-        {/* Atmospheric Particles */}
+        {/* Atmospheric Particles - REDUZIDO para 3 */}
         <AnimatePresence>
-          {[...Array(6)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-30"
+              className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-30 will-change-transform pointer-events-none"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: `${25 + i * 25}%`,
+                top: `${30 + i * 15}%`,
               }}
               animate={{
                 y: [-20, -40],
                 opacity: [0.3, 0, 0.3],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: 4,
                 repeat: Infinity,
-                delay: i * 0.5,
+                delay: i * 0.8,
+                ease: "easeInOut",
               }}
             />
           ))}

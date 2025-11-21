@@ -17,6 +17,7 @@ pub mod block_battle {
         min_deposit: u64,
         arbiter: Pubkey,
         lock_time: i64,
+        is_automatic: bool,
     ) -> Result<()> {
         let bet = &mut ctx.accounts.bet;
         let creator = &ctx.accounts.creator;
@@ -33,11 +34,13 @@ pub mod block_battle {
         bet.status = BetStatus::Open;
         bet.player_count = 0;
         bet.bump = ctx.bumps.bet;
+        bet.is_automatic = is_automatic;
 
         msg!("Bet created by: {}", creator.key());
         msg!("Min deposit: {} lamports", min_deposit);
         msg!("Lock time: {}", lock_time);
         msg!("Arbiter: {}", arbiter);
+        msg!("Is automatic: {}", is_automatic);
 
         Ok(())
     }
@@ -88,7 +91,7 @@ pub mod block_battle {
         Ok(())
     }
 
-    /// Arbiter reveals the winning block
+    /// Arbiter reveals the winning block (only for non-automatic bets)
     pub fn reveal_winner(
         ctx: Context<RevealWinner>,
         winning_block: u8,
@@ -97,6 +100,7 @@ pub mod block_battle {
         let arbiter = &ctx.accounts.arbiter;
 
         require!(bet.status == BetStatus::Open, BetError::BetNotOpen);
+        require!(!bet.is_automatic, BetError::AutomaticBetCannotManualReveal);
         require!(bet.arbiter == arbiter.key(), BetError::UnauthorizedArbiter);
         require!(winning_block > 0 && winning_block <= TOTAL_BLOCKS, BetError::InvalidBlock);
         // Arbiter can reveal at any time, no lock_time check needed
@@ -119,6 +123,50 @@ pub mod block_battle {
         require!(winner_count > 0, BetError::NoWinners);
 
         msg!("Winning block revealed: {}", winning_block);
+        msg!("Winners: {}", winner_count);
+        msg!("Total winner deposits: {} lamports", total_winner_deposits);
+
+        Ok(())
+    }
+
+    /// Auto-reveal winner for automatic bets (anyone can call after lock time)
+    pub fn auto_reveal_winner(ctx: Context<AutoRevealWinner>) -> Result<()> {
+        let bet = &mut ctx.accounts.bet;
+        let clock = Clock::get()?;
+
+        require!(bet.status == BetStatus::Open, BetError::BetNotOpen);
+        require!(bet.is_automatic, BetError::NotAutomaticBet);
+        require!(clock.unix_timestamp >= bet.lock_time, BetError::BetNotLocked);
+        require!(bet.player_count >= 2, BetError::NotEnoughPlayers);
+
+        // Generate pseudo-random number 1-25 based on clock, slot, and bet data
+        // This provides on-chain randomness without requiring external oracles
+        let random_seed = clock
+            .unix_timestamp
+            .wrapping_add(clock.slot as i64)
+            .wrapping_add(bet.total_pool as i64)
+            .wrapping_add(bet.player_count as i64);
+
+        let winning_block = ((random_seed.abs() % TOTAL_BLOCKS as i64) + 1) as u8;
+
+        bet.winner_block = Some(winning_block);
+        bet.status = BetStatus::Revealed;
+
+        // Calculate winners
+        let mut winner_count = 0;
+        let mut total_winner_deposits = 0u64;
+
+        for i in 0..bet.player_count as usize {
+            if bet.chosen_blocks[i] == winning_block {
+                winner_count += 1;
+                total_winner_deposits += bet.deposits[i];
+            }
+        }
+
+        // If no winners, allow another reveal attempt
+        require!(winner_count > 0, BetError::NoWinners);
+
+        msg!("Auto-revealed winning block: {}", winning_block);
         msg!("Winners: {}", winner_count);
         msg!("Total winner deposits: {} lamports", total_winner_deposits);
 
@@ -230,6 +278,14 @@ pub struct RevealWinner<'info> {
 }
 
 #[derive(Accounts)]
+pub struct AutoRevealWinner<'info> {
+    #[account(mut)]
+    pub bet: Account<'info, BetAccount>,
+    /// Anyone can trigger auto-reveal after lock time
+    pub caller: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct ClaimWinnings<'info> {
     #[account(mut)]
     pub bet: Account<'info, BetAccount>,
@@ -261,6 +317,7 @@ pub struct BetAccount {
     pub status: BetStatus,         // 1
     pub player_count: u8,          // 1
     pub bump: u8,                  // 1
+    pub is_automatic: bool,        // 1 - true = auto reveal, false = arbiter reveals
     #[max_len(100)]
     pub players: Vec<Pubkey>,      // 4 + (32 * 100)
     #[max_len(100)]
@@ -314,4 +371,8 @@ pub enum BetError {
     Unauthorized,
     #[msg("Bet already locked")]
     BetAlreadyLocked,
+    #[msg("Automatic bet cannot be manually revealed")]
+    AutomaticBetCannotManualReveal,
+    #[msg("Not an automatic bet")]
+    NotAutomaticBet,
 }

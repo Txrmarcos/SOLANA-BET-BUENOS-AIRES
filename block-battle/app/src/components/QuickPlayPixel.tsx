@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { PublicKey } from "@solana/web3.js";
@@ -39,7 +39,6 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
   const [myChosenBlock, setMyChosenBlock] = useState<number | null>(null);
   const [depositAmount, setDepositAmount] = useState("0.1");
   const [poolData, setPoolData] = useState<any>(null);
-  const [trapTypes, setTrapTypes] = useState<Record<number, TrapType>>({});
   const [doorStates, setDoorStates] = useState<Record<number, DoorState>>({});
 
   const {
@@ -50,112 +49,120 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
     closeVictory,
   } = useDungeonReveal();
 
-  // Initialize random trap types
-  useEffect(() => {
+  // Initialize random trap types - OTIMIZADO com useMemo
+  const trapTypes = useMemo(() => {
     const types: Record<number, TrapType> = {};
     for (let i = 1; i <= TOTAL_BLOCKS; i++) {
       types[i] = TRAP_TYPES[Math.floor(Math.random() * TRAP_TYPES.length)];
     }
-    setTrapTypes(types);
-  }, []);
+    return types;
+  }, []); // Só calcula uma vez
 
-  // Find active pool
+  // Find active pool - OTIMIZADO
   const findActivePool = async () => {
     try {
-      const accounts = await connection.getProgramAccounts(PROGRAM_ID);
+      // STATUS_OFFSET = discriminator(8) + creator(32) + arbiter(32) +
+      // min_deposit(8) + total_pool(8) + lock_time(8) + winner_block(2) = 98
+      const STATUS_OFFSET = 98;
+
+      console.log("🔍 Buscando pool ativo...");
+
+      // Usar filtro memcmp para status = 0 (Open)
+      const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
+        filters: [
+          {
+            memcmp: {
+              offset: STATUS_OFFSET,
+              bytes: "1", // Base58 de 0
+            },
+          },
+        ],
+        dataSlice: {
+          offset: 0,
+          length: 150, // Apenas metadata básica
+        },
+      });
+
+      console.log(`✅ Encontradas ${accounts.length} apostas abertas`);
+
       let bestPool: ActivePool | null = null;
       const currentTime = Math.floor(Date.now() / 1000);
 
-      for (const account of accounts) {
-        try {
-          const data = account.account.data;
-          let offset = 8;
-          offset += 32; // creator
-          offset += 32; // arbiter
-          const minDeposit = Number(data.readBigUInt64LE(offset));
-          offset += 8;
-          const totalPool = Number(data.readBigUInt64LE(offset));
-          offset += 8;
-          const lockTime = Number(data.readBigInt64LE(offset));
-          offset += 8;
-          const hasWinnerBlock = data.readUInt8(offset);
-          offset += 1;
-          if (hasWinnerBlock) offset += 1;
-          const status = data.readUInt8(offset);
-          offset += 1;
-          const playerCount = data.readUInt8(offset);
+      // Limitar a 20 primeiras contas para não sobrecarregar
+      const limitedAccounts = accounts.slice(0, 20);
 
-          if (status === 0 && lockTime > currentTime && playerCount < 100) {
+      for (const account of limitedAccounts) {
+        try {
+          // Usar Anchor deserializer (MUITO mais rápido!)
+          const data = await getBetData(account.pubkey);
+          if (!data) continue;
+
+          const status = Object.keys(data.status)[0];
+          const lockTime = data.lockTime.toNumber();
+          const playerCount = data.playerCount;
+
+          if (status === "open" && lockTime > currentTime && playerCount < 100) {
             if (!bestPool || playerCount > bestPool.playerCount) {
               bestPool = {
                 address: account.pubkey.toBase58(),
-                minDeposit: minDeposit / 1e9,
-                totalPool: totalPool / 1e9,
+                minDeposit: data.minDeposit.toNumber() / 1e9,
+                totalPool: data.totalPool.toNumber() / 1e9,
                 playerCount,
                 lockTime,
               };
+              // Já temos os dados, cachear
+              setPoolData(data);
             }
           }
         } catch (err) {
-          console.error("Error parsing account:", err);
+          console.warn("⚠️ Erro ao buscar dados do pool:", err);
         }
       }
 
       setActivePool(bestPool);
-      if (bestPool) {
-        await loadPoolData(bestPool.address);
-      }
+      // Não precisa chamar loadPoolData novamente se já temos os dados
     } catch (error) {
-      console.error("Error finding pools:", error);
+      console.error("❌ Erro ao buscar pools:", error);
     } finally {
       setSearching(false);
     }
   };
 
-  // Load pool data
+  // Load pool data - OTIMIZADO (evita chamadas duplicadas)
   const loadPoolData = async (address: string) => {
     try {
       const poolPDA = new PublicKey(address);
       const data = await getBetData(poolPDA);
+
+      if (!data) {
+        console.warn("⚠️ Dados do pool não encontrados");
+        return;
+      }
+
       setPoolData(data);
 
+      // Check if player joined (usando os dados já carregados)
       if (publicKey) {
-        await checkIfJoined(address);
+        const playerIndex = data.players.findIndex(
+          (player: PublicKey) => player.toBase58() === publicKey.toBase58()
+        );
+
+        if (playerIndex !== -1) {
+          const chosenBlock = data.chosenBlocks[playerIndex];
+          setHasJoined(true);
+          setMyChosenBlock(chosenBlock);
+          setSelectedBlock(chosenBlock);
+        }
       }
 
       // Check if revealed
       const status = Object.keys(data.status)[0];
-      if (status === "revealed" && !isRevealing) {
+      if (status === "revealed" && !isRevealing && data.winnerBlock) {
         startReveal(data.winnerBlock, myChosenBlock || undefined);
       }
     } catch (error) {
-      console.error("Error loading pool:", error);
+      console.error("❌ Erro ao carregar dados do pool:", error);
     }
-  };
-
-  // Check if joined
-  const checkIfJoined = async (address: string) => {
-    if (!publicKey) return false;
-
-    try {
-      const poolPDA = new PublicKey(address);
-      const data = await getBetData(poolPDA);
-
-      const playerIndex = data.players.findIndex(
-        (player: PublicKey) => player.toBase58() === publicKey.toBase58()
-      );
-
-      if (playerIndex !== -1) {
-        const chosenBlock = data.chosenBlocks[playerIndex];
-        setHasJoined(true);
-        setMyChosenBlock(chosenBlock);
-        setSelectedBlock(chosenBlock);
-        return true;
-      }
-    } catch (error) {
-      console.error("Error checking join status:", error);
-    }
-    return false;
   };
 
   // Handle join
@@ -298,24 +305,25 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
           {/* Vignette */}
           <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/40" />
 
-          {/* Floating particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(8)].map((_, i) => (
+          {/* Floating particles - REDUZIDO para 3 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+                className="absolute w-1 h-1 bg-cyan-400/30 rounded-full will-change-transform"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
+                  left: `${20 + i * 30}%`,
+                  top: `${30 + i * 20}%`,
                 }}
                 animate={{
                   y: [0, -30, 0],
-                  opacity: [0, 0.6, 0],
+                  opacity: [0, 0.5, 0],
                 }}
                 transition={{
-                  duration: 3 + Math.random() * 2,
+                  duration: 4,
                   repeat: Infinity,
-                  delay: Math.random() * 2,
+                  delay: i * 0.8,
+                  ease: "easeInOut",
                 }}
               />
             ))}
