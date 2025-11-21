@@ -126,10 +126,10 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
               >
                 <div className="relative w-32 h-32 mx-auto mb-8">
                   {/* Dark glow */}
-                  <div className="absolute inset-0 bg-red-900/20 rounded-lg blur-2xl"></div>
+                  <div className="absolute inset-0 bg-red-900/20  blur-2xl"></div>
 
                   {/* Stone frame */}
-                  <div className="relative bg-gradient-to-br from-gray-800 via-gray-900 to-black border-4 border-gray-700 rounded-lg p-6 shadow-[0_0_40px_rgba(0,0,0,0.9)]">
+                  <div className="relative bg-gradient-to-br from-gray-800 via-gray-900 to-black border-4 border-gray-700  p-6 shadow-[0_0_40px_rgba(0,0,0,0.9)]">
                     <motion.div
                       className="text-5xl filter drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]"
                       animate={{

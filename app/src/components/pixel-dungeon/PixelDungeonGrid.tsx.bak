@@ -97,7 +97,7 @@ export default function PixelDungeonGrid({
   return (
     <div className="relative w-full max-w-4xl mx-auto">
       {/* Dungeon Background */}
-      <div className="absolute inset-0 -m-8 bg-gradient-to-b from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] rounded-3xl opacity-90 blur-sm" />
+      <div className="absolute inset-0 -m-8 bg-gradient-to-b from-[#0f0f1e] via-[#1a1a2e] to-[#0f0f1e] rounded-3xl opacity-90 blur-sm" />
 
       {/* Torches on sides */}
       <div className="absolute -left-12 top-1/2 -translate-y-1/2">
@@ -116,10 +116,10 @@ export default function PixelDungeonGrid({
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold pixel-font text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 drop-shadow-[0_0_20px_rgba(255,140,0,0.5)]">
+          <h2 className="text-4xl md:text-5xl font-bold pixel-font text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]">
             {isRevealing ? "⚔️ REVEALING FATE ⚔️" : "🗝️ CHOOSE YOUR DOOR 🗝️"}
           </h2>
-          <p className="text-gray-500 pixel-font mt-2 text-sm md:text-base">
+          <p className="text-cyan-300 pixel-font mt-2 text-sm md:text-base">
             {isRevealing
               ? "Only one door contains the treasure..."
               : "One door leads to treasure, the others to traps!"}
@@ -159,10 +159,10 @@ export default function PixelDungeonGrid({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/20 border-2 border-orange-700 rounded-xl">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 border-2 border-cyan-500 rounded-xl">
               <span className="text-2xl">🎯</span>
-              <span className="pixel-font text-gray-500">
-                You chose Door <span className="text-orange-300 font-bold">{playerBlock}</span>
+              <span className="pixel-font text-cyan-300">
+                You chose Door <span className="text-cyan-100 font-bold">{playerBlock}</span>
               </span>
             </div>
           </motion.div>
@@ -173,7 +173,7 @@ export default function PixelDungeonGrid({
           {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-orange-500 rounded-full opacity-30 will-change-transform pointer-events-none"
+              className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-30 will-change-transform pointer-events-none"
               style={{
                 left: `${25 + i * 25}%`,
                 top: `${30 + i * 15}%`,

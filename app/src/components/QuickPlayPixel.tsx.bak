@@ -191,7 +191,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
               href={getExplorerUrl(txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-orange-400 underline text-xs font-mono"
+              className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
               onClick={(e) => e.stopPropagation()}
             >
               🔍 View Transaction
@@ -230,7 +230,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
               href={getExplorerUrl(txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-orange-400 underline text-xs font-mono"
+              className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
               onClick={(e) => e.stopPropagation()}
             >
               🔍 View Transaction
@@ -312,29 +312,29 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
 
   if (!connected) {
     return (
-      <div className="bg-gradient-to-br from-black to-gray-950 border-4 border-gray-800  p-16 text-center" style={{clipPath: 'polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))'}}>
-        <div className="text-5xl mb-4">💀</div>
-        <h3 className="text-xl font-semibold mb-2 text-gray-100 pixel-font" style={{textShadow: "4px 4px 0px #000, 8px 8px 20px rgba(0, 0, 0, 0.8)"}}>CONNECT WALLET</h3>
-        <p className="text-gray-600 text-sm pixel-font">Connect your wallet to enter the dungeon</p>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+        <div className="text-5xl mb-4">🔒</div>
+        <h3 className="text-xl font-semibold mb-2 text-white">Connect Wallet</h3>
+        <p className="text-[#A1A1AA] text-sm">Connect your wallet to play</p>
       </div>
     );
   }
 
   if (searching) {
     return (
-      <div className="bg-gradient-to-br from-black to-gray-950 border-4 border-gray-800  p-16 text-center" style={{clipPath: 'polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))'}}>
-        <div className="inline-block animate-spin h-12 w-12 border-b-2 border-gray-800 mb-4"></div>
-        <p className="text-gray-500 pixel-font">Finding active dungeons...</p>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-[#A1A1AA]">Finding active pools...</p>
       </div>
     );
   }
 
   if (!activePool) {
     return (
-      <div className="bg-gradient-to-br from-black to-gray-950 border-4 border-gray-800  p-16 text-center" style={{clipPath: 'polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))'}}>
-        <div className="text-5xl mb-4">💀</div>
-        <h3 className="text-xl font-semibold mb-2 text-gray-100 pixel-font" style={{textShadow: "4px 4px 0px #000, 8px 8px 20px rgba(0, 0, 0, 0.8)"}}>NO ACTIVE DUNGEONS</h3>
-        <p className="text-gray-600 text-sm pixel-font">Forge a new dungeon in the 🔨 tab!</p>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+        <div className="text-5xl mb-4">📭</div>
+        <h3 className="text-xl font-semibold mb-2 text-white">No Active Pools</h3>
+        <p className="text-[#A1A1AA] text-sm">Create a new pool to get started</p>
       </div>
     );
   }
@@ -346,7 +346,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
   const playerCount = poolData ? poolData.playerCount : activePool.playerCount;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {/* Dungeon Banner - Irregular stone plaque */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -354,9 +354,9 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
         className="relative"
       >
         {/* Outer glow */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-red-950/10 via-orange-950/10 to-red-950/10  blur-2xl" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 via-cyan-600/30 to-purple-600/30 rounded-[2.5rem] blur-2xl" />
 
-        <div className="relative bg-gradient-to-br from-black via-gray-950 to-black  p-6 overflow-hidden border-4 border-gray-800/40 shadow-[inset_0_2px_20px_rgba(0,0,0,0.8),0_0_40px_rgba(0,0,0,0.15)]" style={{clipPath: 'polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))'}}>
+        <div className="relative bg-gradient-to-br from-[#0a0a15] via-[#15152a] to-[#0a0a15] rounded-[2.5rem] p-10 overflow-hidden border-2 border-purple-500/40 shadow-[inset_0_2px_20px_rgba(0,0,0,0.8),0_0_40px_rgba(168,85,247,0.15)]">
           {/* Animated stone texture */}
           <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.08] mix-blend-overlay" />
 
@@ -368,7 +368,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
             {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-orange-600/30  will-change-transform"
+                className="absolute w-1 h-1 bg-cyan-400/30 rounded-full will-change-transform"
                 style={{
                   left: `${20 + i * 30}%`,
                   top: `${30 + i * 20}%`,
@@ -389,7 +389,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
 
           <div className="relative z-10 text-center">
             <motion.div
-              className="inline-block text-5xl mb-2"
+              className="inline-block text-7xl mb-4"
               animate={{
                 rotate: [0, -5, 5, 0],
                 scale: [1, 1.05, 1],
@@ -404,22 +404,33 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
             </motion.div>
 
             <motion.h2
-              className="text-3xl md:text-4xl pixel-font mb-2 text-gray-100"
+              className="text-4xl md:text-5xl pixel-font mb-3"
               style={{
-                textShadow: "4px 4px 0px #000, 8px 8px 20px rgba(0, 0, 0, 0.8)",
+                background: "linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #a78bfa 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 0 20px rgba(167, 139, 250, 0.5))",
               }}
+              animate={{
+                filter: [
+                  "drop-shadow(0 0 20px rgba(167, 139, 250, 0.5))",
+                  "drop-shadow(0 0 30px rgba(6, 182, 212, 0.6))",
+                  "drop-shadow(0 0 20px rgba(167, 139, 250, 0.5))",
+                ]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
             >
               {isAutomatic ? "AUTOMATIC DUNGEON" : "ARBITER DUNGEON"}
             </motion.h2>
 
-            <p className="text-xs pixel-font text-gray-600 mb-4">
+            <p className="text-sm pixel-font text-cyan-300/80 mb-6">
               {isAutomatic ? "⚡ Winner reveals automatically" : "👑 Arbiter reveals the winner"}
             </p>
 
             <div className="inline-flex items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-5 py-2 bg-black/40  border border-gray-800/30 backdrop-blur-sm" style={{clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)'}}>
-                <div className="w-2 h-2 bg-orange-500  animate-pulse" />
-                <span className="text-xs pixel-font text-gray-500/70 font-mono">
+              <div className="inline-flex items-center gap-2 px-5 py-2 bg-black/40 rounded-full border border-purple-500/30 backdrop-blur-sm">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+                <span className="text-xs pixel-font text-purple-300/70 font-mono">
                   {activePool.address.slice(0, 8)}...{activePool.address.slice(-8)}
                 </span>
               </div>
@@ -427,8 +438,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
                 onClick={() => window.open(getExplorerAddressUrl(activePool.address), "_blank")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-3 py-2 bg-orange-700/30 hover:bg-orange-700/50 border border-orange-700/40 text-gray-500  text-xs pixel-font transition-all"
-                style={{clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)'}}
+                className="px-3 py-2 bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 rounded-full text-xs pixel-font transition-all"
                 title="View on Solana Explorer"
               >
                 🔍 EXPLORER
@@ -441,9 +451,9 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
       {/* RPG Stats Badges - Floating pills instead of grid */}
       <div className="relative">
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <StatPill icon="💰" label="POOL" value={`${poolTotal.toFixed(3)} SOL`} accent="orange" />
-          <StatPill icon="👥" label="PLAYERS" value={`${playerCount}/100`} accent="orange" />
-          <StatPill icon="🎫" label="ENTRY" value={`${minDeposit.toFixed(3)} SOL`} accent="orange" />
+          <StatPill icon="💰" label="POOL" value={`${poolTotal.toFixed(3)} SOL`} accent="purple" />
+          <StatPill icon="👥" label="PLAYERS" value={`${playerCount}/100`} accent="cyan" />
+          <StatPill icon="🎫" label="ENTRY" value={`${minDeposit.toFixed(3)} SOL`} accent="purple" />
           <StatPill
             icon={status === "open" ? "🟢" : status === "revealed" ? "🏆" : "🔴"}
             label="STATUS"
@@ -461,19 +471,19 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
         className="relative"
       >
         {/* Outer atmospheric glow */}
-        <div className="absolute -inset-4 bg-gradient-to-b from-red-950/10 via-orange-950/10 to-red-950/10  blur-3xl" />
+        <div className="absolute -inset-4 bg-gradient-to-b from-purple-900/20 via-cyan-900/20 to-purple-900/20 rounded-[3rem] blur-3xl" />
 
         {/* Main dungeon floor container */}
-        <div className="relative bg-gradient-to-b from-black via-gray-950 to-black  p-6 md:p-8 overflow-hidden border-4 border-gray-800/30 shadow-[inset_0_4px_30px_rgba(0,0,0,0.9),0_0_50px_rgba(0,0,0,0.1)]" style={{clipPath: 'polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px))'}}>
+        <div className="relative bg-gradient-to-b from-[#08080f] via-[#0f0f1a] to-[#08080f] rounded-[2rem] p-8 md:p-10 overflow-hidden border-2 border-purple-500/30 shadow-[inset_0_4px_30px_rgba(0,0,0,0.9),0_0_50px_rgba(139,92,246,0.1)]">
           {/* Dungeon stone floor texture */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-[0.06]" />
-            <div className="absolute inset-0 bg-gradient-radial from-transparent via-gray-900/5 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-radial from-transparent via-purple-900/5 to-black/30" />
           </div>
 
           {/* Animated torch light effect */}
           <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-radial from-orange-500/10 via-yellow-500/5 to-transparent  blur-3xl"
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-gradient-radial from-orange-500/10 via-yellow-500/5 to-transparent rounded-full blur-3xl"
             animate={{
               opacity: [0.3, 0.5, 0.3],
               scale: [1, 1.1, 1],
@@ -488,7 +498,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
           <div className="relative z-10">
             {/* Title with breathing animation */}
             <motion.div
-              className="text-center mb-6"
+              className="text-center mb-8"
               animate={{
                 y: [0, -4, 0],
               }}
@@ -499,15 +509,18 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
               }}
             >
               <h3
-                className="text-xl md:text-2xl pixel-font mb-1 text-gray-100"
+                className="text-2xl md:text-3xl pixel-font mb-1"
                 style={{
-                  textShadow: "4px 4px 0px #000, 8px 8px 20px rgba(0, 0, 0, 0.8)",
+                  background: "linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #a78bfa 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  filter: "drop-shadow(0 0 15px rgba(167, 139, 250, 0.4))",
                 }}
               >
-                {isRevealing ? "💀 REVEALING 💀" : "💀 CHOOSE YOUR DOOR 💀"}
+                {isRevealing ? "⚔️ REVEALING ⚔️" : "🗝️ CHOOSE YOUR DOOR 🗝️"}
               </h3>
-              <p className="text-xs pixel-font text-gray-600">
-                {isRevealing ? "The fate is being revealed..." : "Pick your door. Face your doom."}
+              <p className="text-xs pixel-font text-purple-300/60">
+                {isRevealing ? "The treasure is being revealed..." : "Pick wisely, adventurer"}
               </p>
             </motion.div>
 
@@ -546,10 +559,10 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700/20 border-2 border-orange-700" style={{clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)'}}>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/20 border-2 border-cyan-500 rounded-lg">
               <span className="text-lg">🎯</span>
-              <span className="pixel-font text-xs text-gray-500">
-                YOU CHOSE DOOR <span className="text-orange-300 font-bold">{myChosenBlock}</span>
+              <span className="pixel-font text-xs text-cyan-300">
+                YOU CHOSE DOOR <span className="text-cyan-100 font-bold">{myChosenBlock}</span>
               </span>
             </div>
           </motion.div>
@@ -559,7 +572,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
             {!hasJoined && status === "open" && (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm pixel-font text-gray-500 mb-2">
+            <label className="block text-sm pixel-font text-purple-300 mb-2">
               DEPOSIT (SOL)
             </label>
             <input
@@ -568,16 +581,14 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
               min={activePool.minDeposit}
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
-              className="w-full px-4 py-3 bg-black/50 border-2 border-gray-800/50  text-white pixel-font text-sm focus:outline-none focus:border-gray-800"
-              style={{clipPath: 'polygon(0 6px, 6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px))'}}
+              className="w-full px-4 py-3 bg-black/50 border-2 border-purple-500/50 rounded-xl text-white pixel-font text-sm focus:outline-none focus:border-purple-500"
             />
           </div>
 
           <button
             onClick={handleJoin}
             disabled={loading || selectedBlock === null}
-            className="w-full py-3 bg-gradient-to-r from-orange-900 to-red-900 border-4 border-orange-700  pixel-font text-lg text-white hover:from-orange-800 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            style={{clipPath: 'polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))'}}
+            className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 border-4 border-green-400 rounded-xl pixel-font text-lg text-white hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {loading ? "ENTERING..." : selectedBlock ? `⚔️ ENTER DOOR ${selectedBlock} ⚔️` : "SELECT A DOOR"}
           </button>
@@ -604,37 +615,43 @@ function StatPill({
   icon,
   label,
   value,
-  accent = "orange",
+  accent = "purple",
 }: {
   icon: string;
   label: string;
   value: string;
-  accent?: "orange" | "green" | "yellow" | "red";
+  accent?: "purple" | "cyan" | "green" | "yellow" | "red";
 }) {
   const accentColors = {
-    orange: {
-      bg: "from-orange-950/20 to-black/20",
-      border: "border-orange-900/40",
-      glow: "shadow-orange-950/20",
-      text: "text-orange-400",
+    purple: {
+      bg: "from-purple-600/20 to-purple-900/20",
+      border: "border-purple-500/40",
+      glow: "shadow-purple-500/20",
+      text: "text-purple-300",
+    },
+    cyan: {
+      bg: "from-cyan-600/20 to-cyan-900/20",
+      border: "border-cyan-500/40",
+      glow: "shadow-cyan-500/20",
+      text: "text-cyan-300",
     },
     green: {
-      bg: "from-green-950/20 to-black/20",
-      border: "border-green-900/40",
-      glow: "shadow-green-950/20",
-      text: "text-green-400",
+      bg: "from-green-600/20 to-green-900/20",
+      border: "border-green-500/40",
+      glow: "shadow-green-500/20",
+      text: "text-green-300",
     },
     yellow: {
-      bg: "from-yellow-950/20 to-orange-950/20",
-      border: "border-yellow-900/40",
-      glow: "shadow-yellow-900/20",
-      text: "text-yellow-500",
+      bg: "from-yellow-600/20 to-yellow-900/20",
+      border: "border-yellow-500/40",
+      glow: "shadow-yellow-500/20",
+      text: "text-yellow-300",
     },
     red: {
-      bg: "from-red-950/20 to-black/20",
-      border: "border-red-900/40",
-      glow: "shadow-red-950/20",
-      text: "text-red-400",
+      bg: "from-red-600/20 to-red-900/20",
+      border: "border-red-500/40",
+      glow: "shadow-red-500/20",
+      text: "text-red-300",
     },
   };
 
@@ -647,11 +664,10 @@ function StatPill({
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       {/* Glow effect on hover */}
-      <div className={`absolute -inset-0.5 bg-gradient-to-r ${colors.bg}  blur opacity-0 group-hover:opacity-100 transition duration-300`} />
+      <div className={`absolute -inset-0.5 bg-gradient-to-r ${colors.bg} rounded-full blur opacity-0 group-hover:opacity-100 transition duration-300`} />
 
       <div
-        className={`relative flex items-center gap-3 px-5 py-3 bg-gradient-to-br ${colors.bg} border-2 ${colors.border} backdrop-blur-sm shadow-lg ${colors.glow}`}
-        style={{clipPath: 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)'}}
+        className={`relative flex items-center gap-3 px-5 py-3 bg-gradient-to-br ${colors.bg} rounded-full border ${colors.border} backdrop-blur-sm shadow-lg ${colors.glow}`}
       >
         {/* Floating icon */}
         <motion.div
@@ -683,9 +699,9 @@ function StatPill({
 
 function StatBox({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="bg-black/30 p-3 border-2 border-gray-800 text-center" style={{clipPath: 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)'}}>
+    <div className="bg-black/30 rounded-lg p-3 border border-purple-500/20 text-center">
       <div className="text-2xl mb-1">{icon}</div>
-      <p className="text-[10px] pixel-font text-gray-500 mb-0.5">{label}</p>
+      <p className="text-[10px] pixel-font text-purple-300 mb-0.5">{label}</p>
       <p className="text-sm pixel-font text-white font-bold truncate">{value}</p>
     </div>
   );

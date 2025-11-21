@@ -135,7 +135,7 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
 
   if (!connected) {
     return (
-      <div className="dungeon-bg min-h-[600px] rounded-3xl border-4 border-gray-800/30 p-16 text-center relative overflow-hidden">
+      <div className="dungeon-bg min-h-[600px] rounded-3xl border-4 border-purple-500/30 p-16 text-center relative overflow-hidden">
         <div className="relative z-10">
           <motion.div
             className="text-8xl mb-6"
@@ -144,10 +144,10 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
           >
             🔒
           </motion.div>
-          <h3 className="text-3xl font-bold pixel-font text-gray-500 mb-4 shadow-8bit">
+          <h3 className="text-3xl font-bold pixel-font text-purple-300 mb-4 shadow-8bit">
             CONNECT WALLET
           </h3>
-          <p className="text-gray-500 pixel-font text-sm">
+          <p className="text-cyan-300 pixel-font text-sm">
             Connect your wallet to enter the dungeon
           </p>
         </div>
@@ -156,7 +156,7 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
         {[...Array(10)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-orange-500 rounded-full"
+            className="absolute w-1 h-1 bg-purple-400 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -184,16 +184,16 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
       {/* Pool Input Section */}
       {!poolData && (
         <motion.div
-          className="dungeon-bg rounded-2xl border-4 border-gray-800/30 p-8 stone-texture"
+          className="dungeon-bg rounded-2xl border-4 border-purple-500/30 p-8 stone-texture"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-3xl pixel-font text-gray-500 mb-2 shadow-8bit">
+              <h3 className="text-3xl pixel-font text-purple-300 mb-2 shadow-8bit">
                 🗝️ ENTER DUNGEON 🗝️
               </h3>
-              <p className="text-gray-500 pixel-font text-sm">
+              <p className="text-cyan-300 pixel-font text-sm">
                 Paste pool address to begin your quest
               </p>
             </div>
@@ -203,13 +203,13 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
                 type="text"
                 value={poolAddress}
                 onChange={(e) => setPoolAddress(e.target.value)}
-                className="flex-1 px-4 py-3 bg-black/50 border-4 border-gray-800/50 rounded-xl text-white pixel-font text-sm focus:outline-none focus:border-orange-900/50 transition-all"
+                className="flex-1 px-4 py-3 bg-black/50 border-4 border-purple-500/50 rounded-xl text-white pixel-font text-sm focus:outline-none focus:border-purple-500 transition-all"
                 placeholder="Pool address..."
               />
               <button
                 onClick={() => loadSpecificPool(poolAddress)}
                 disabled={loading || !poolAddress}
-                className="px-6 py-3 bg-gradient-to-r from-orange-900 to-red-900 border-4 border-gray-700 rounded-xl pixel-font text-white hover:from-orange-800 hover:to-red-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed pixel-button"
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 border-4 border-purple-400 rounded-xl pixel-font text-white hover:from-purple-500 hover:to-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed pixel-button"
               >
                 {loading ? "..." : "LOAD"}
               </button>
@@ -223,7 +223,7 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
         <div className="space-y-8">
           {/* Pool Stats */}
           <motion.div
-            className="dungeon-bg rounded-2xl border-4 border-orange-700/30 p-6"
+            className="dungeon-bg rounded-2xl border-4 border-cyan-500/30 p-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -238,13 +238,13 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
                 icon="👥"
                 label="ADVENTURERS"
                 value={`${poolData.playerCount} / 100`}
-                color="orange"
+                color="cyan"
               />
               <StatBox
                 icon="⚔️"
                 label="ENTRY FEE"
                 value={`${(poolData.minDeposit.toNumber() / 1e9).toFixed(4)} SOL`}
-                color="orange"
+                color="purple"
               />
               <StatBox
                 icon={status === "open" ? "🟢" : status === "revealed" ? "🏆" : "🔴"}
@@ -273,7 +273,7 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
               animate={{ opacity: 1, y: 0 }}
             >
               <div>
-                <label className="block pixel-font text-sm text-gray-500 mb-2">
+                <label className="block pixel-font text-sm text-purple-300 mb-2">
                   DEPOSIT AMOUNT (SOL)
                 </label>
                 <input
@@ -282,14 +282,14 @@ export default function PixelQuickPlay({ betAddress }: PixelQuickPlayProps) {
                   min={poolData.minDeposit.toNumber() / 1e9}
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-black/50 border-4 border-orange-700/50 rounded-xl text-white pixel-font focus:outline-none focus:border-orange-700 transition-all"
+                  className="w-full px-4 py-3 bg-black/50 border-4 border-cyan-500/50 rounded-xl text-white pixel-font focus:outline-none focus:border-cyan-500 transition-all"
                 />
               </div>
 
               <button
                 onClick={handleJoin}
                 disabled={loading || selectedBlock === null}
-                className="w-full py-4 bg-gradient-to-r from-orange-900 to-red-900 border-4 border-orange-700 rounded-xl pixel-font text-2xl text-white hover:from-orange-800 hover:to-red-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed pixel-button shadow-lg"
+                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 border-4 border-green-400 rounded-xl pixel-font text-2xl text-white hover:from-green-500 hover:to-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed pixel-button shadow-lg"
               >
                 {loading
                   ? "ENTERING..."
@@ -327,11 +327,12 @@ function StatBox({
   color: string;
 }) {
   const colorMap: Record<string, string> = {
-    yellow: "from-yellow-950/20 to-orange-950/20 border-yellow-900",
-    orange: "from-orange-950/20 to-black/20 border-orange-900",
-    green: "from-green-950/20 to-black/20 border-green-900",
-    gold: "from-yellow-950/20 to-orange-950/20 border-yellow-900",
-    red: "from-red-950/20 to-black/20 border-red-900",
+    yellow: "from-yellow-600/20 to-yellow-500/20 border-yellow-500",
+    cyan: "from-cyan-600/20 to-cyan-500/20 border-cyan-500",
+    purple: "from-purple-600/20 to-purple-500/20 border-purple-500",
+    green: "from-green-600/20 to-green-500/20 border-green-500",
+    gold: "from-yellow-600/20 to-orange-500/20 border-yellow-500",
+    red: "from-red-600/20 to-red-500/20 border-red-500",
   };
 
   return (

@@ -28,11 +28,11 @@ export default function PixelDoor({
   const getTrapColor = () => {
     switch (trapType) {
       case "arrow": return "#8B4513";
-      case "poison": return "#581c87";
-      case "skeleton": return "#d4d4d8";
-      case "slime": return "#166534";
-      case "spikes": return "#52525b";
-      case "curse": return "#991b1b";
+      case "poison": return "#9333ea";
+      case "skeleton": return "#f5f5f5";
+      case "slime": return "#22c55e";
+      case "spikes": return "#71717a";
+      case "curse": return "#dc2626";
       default: return "#8B4513";
     }
   };
@@ -183,13 +183,13 @@ export default function PixelDoor({
               {/* Selection Glow */}
               {state === "selected" && (
                 <motion.div
-                  className="absolute -inset-1 rounded-lg border-4 border-orange-700"
+                  className="absolute -inset-1 rounded-lg border-4 border-purple-500"
                   animate={{
                     opacity: [0.5, 1, 0.5],
                     boxShadow: [
-                      "0 0 20px rgba(255, 140, 0, 0.5)",
-                      "0 0 40px rgba(255, 140, 0, 1)",
-                      "0 0 20px rgba(255, 140, 0, 0.5)"
+                      "0 0 20px rgba(168, 85, 247, 0.5)",
+                      "0 0 40px rgba(168, 85, 247, 1)",
+                      "0 0 20px rgba(168, 85, 247, 0.5)"
                     ]
                   }}
                   transition={{ duration: 1.5, repeat: Infinity }}

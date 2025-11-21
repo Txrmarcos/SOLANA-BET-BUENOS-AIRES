@@ -265,7 +265,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
   if (!connected) {
     return (
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+      <div className="bg-white/[0.02] border border-white/[0.06]  p-16 text-center">
         <div className="text-6xl mb-6">🎮</div>
         <h2 className="text-2xl font-bold text-white mb-3">Connect Wallet to Play</h2>
         <p className="text-[#A1A1AA] text-sm">
@@ -277,8 +277,8 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
   if (searching) {
     return (
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-12 text-center">
-        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="bg-white/[0.02] border border-white/[0.06]  p-12 text-center">
+        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent  animate-spin mx-auto mb-4"></div>
         <p className="text-[#A1A1AA] text-sm">Searching for active pools...</p>
       </div>
     );
@@ -286,7 +286,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
   if (!activePool) {
     return (
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-16 text-center">
+      <div className="bg-white/[0.02] border border-white/[0.06]  p-16 text-center">
         <div className="text-5xl mb-4">🎯</div>
         <h2 className="text-xl font-bold text-white mb-2">No Active Pools</h2>
         <p className="text-[#A1A1AA] text-sm mb-6">
@@ -301,7 +301,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
               }
             });
           }}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-purple-500/20"
+          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold  transition-all shadow-lg shadow-purple-500/20"
         >
           Create Pool
         </button>
@@ -315,9 +315,9 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
     const seconds = timeLeft % 60;
 
     return (
-      <div className="bg-white/[0.02] border border-green-500/30 rounded-2xl p-8">
+      <div className="bg-white/[0.02] border border-green-500/30  p-8">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-green-500/10  flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">✅</span>
           </div>
           <h2 className="text-2xl font-bold text-white mb-1">You're In!</h2>
@@ -325,15 +325,15 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="bg-white/[0.02] border border-white/[0.06]  p-4 text-center">
             <p className="text-[#A1A1AA] text-xs mb-1 uppercase tracking-wide">Prize Pool</p>
             <p className="text-xl font-bold text-green-400">{activePool.totalPool.toFixed(2)} SOL</p>
           </div>
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="bg-white/[0.02] border border-white/[0.06]  p-4 text-center">
             <p className="text-[#A1A1AA] text-xs mb-1 uppercase tracking-wide">Players</p>
             <p className="text-xl font-bold text-white">{activePool.playerCount}</p>
           </div>
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="bg-white/[0.02] border border-white/[0.06]  p-4 text-center">
             <p className="text-[#A1A1AA] text-xs mb-1 uppercase tracking-wide">Time Left</p>
             <p className="text-xl font-bold text-white font-mono">
               {minutes}:{seconds.toString().padStart(2, '0')}
@@ -349,20 +349,20 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
   }
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+    <div className="bg-white/[0.02] border border-white/[0.06]  p-8">
       {/* Pool Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 text-center group hover:border-purple-500/30 transition-all">
+        <div className="bg-white/[0.02] border border-white/[0.06]  p-5 text-center group hover:border-purple-500/30 transition-all">
           <p className="text-[#A1A1AA] text-xs mb-2 uppercase tracking-wide font-medium">Entry</p>
           <p className="text-2xl font-bold text-white">{activePool.minDeposit} SOL</p>
         </div>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 text-center group hover:border-purple-500/30 transition-all">
+        <div className="bg-white/[0.02] border border-white/[0.06]  p-5 text-center group hover:border-purple-500/30 transition-all">
           <p className="text-[#A1A1AA] text-xs mb-2 uppercase tracking-wide font-medium">Prize Pool</p>
           <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
             {activePool.totalPool.toFixed(2)} SOL
           </p>
         </div>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 text-center group hover:border-purple-500/30 transition-all">
+        <div className="bg-white/[0.02] border border-white/[0.06]  p-5 text-center group hover:border-purple-500/30 transition-all">
           <p className="text-[#A1A1AA] text-xs mb-2 uppercase tracking-wide font-medium">Players</p>
           <p className="text-2xl font-bold text-white">{activePool.playerCount}<span className="text-[#71717A]">/100</span></p>
         </div>
@@ -370,7 +370,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
       {/* Already Joined Message */}
       {hasJoined && myChosenBlock && (
-        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 ">
           <p className="text-green-400 font-semibold text-center flex items-center justify-center gap-2">
             <span className="text-xl">✓</span>
             You already joined with Block {myChosenBlock}
@@ -393,7 +393,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
                 key={block}
                 onClick={() => !hasJoined && setSelectedBlock(block)}
                 disabled={hasJoined}
-                className={`aspect-square rounded-xl font-bold text-lg transition-all ${
+                className={`aspect-square  font-bold text-lg transition-all ${
                   isMyBlock
                     ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white scale-105 shadow-lg shadow-green-500/50 border-2 border-green-400 ring-2 ring-green-400/30"
                     : isSelected
@@ -413,7 +413,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
       {/* Play Button */}
       {hasJoined ? (
         <div className="space-y-4">
-          <div className="p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl text-center">
+          <div className="p-4 bg-white/[0.02] border border-white/[0.06]  text-center">
             <p className="text-[#A1A1AA] text-sm">
               Waiting for arbiter to reveal the winner...
             </p>
@@ -427,11 +427,11 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
           <button
             onClick={handleQuickPlay}
             disabled={loading || selectedBlock === null}
-            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold text-lg py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
+            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold text-lg py-4  transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-3 border-white/30 border-t-white  animate-spin"></div>
                 Joining...
               </span>
             ) : selectedBlock ? (

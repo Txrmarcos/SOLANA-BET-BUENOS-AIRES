@@ -68,7 +68,7 @@ export default function JoinBet() {
 
   if (!connected) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 text-center">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700  p-8 text-center">
         <div className="text-6xl mb-4">🔒</div>
         <h3 className="text-xl font-semibold mb-2">Connect Wallet</h3>
         <p className="text-gray-400">Connect your wallet to join a bet</p>
@@ -77,9 +77,9 @@ export default function JoinBet() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-2xl p-6 shadow-lg">
+    <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30  p-6 shadow-lg">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500  flex items-center justify-center">
           <span className="text-2xl">🎲</span>
         </div>
         <div>
@@ -98,12 +98,12 @@ export default function JoinBet() {
               type="text"
               value={betAddress}
               onChange={(e) => setBetAddress(e.target.value)}
-              className="flex-1 px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm"
+              className="flex-1 px-4 py-3 bg-black/50 border border-gray-700  text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm"
               placeholder="Bet PDA address (or create one first)"
             />
             <button
               onClick={handleLoadBet}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-colors"
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium  transition-colors"
             >
               Load
             </button>
@@ -112,7 +112,7 @@ export default function JoinBet() {
 
         {betData && (
           <>
-            <div className="bg-black/30 rounded-xl p-4 border border-gray-700">
+            <div className="bg-black/30  p-4 border border-gray-700">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-400">Min Deposit</p>
@@ -148,7 +148,7 @@ export default function JoinBet() {
                   <button
                     key={block}
                     onClick={() => setSelectedBlock(block)}
-                    className={`aspect-square rounded-xl font-bold text-lg transition-all ${
+                    className={`aspect-square  font-bold text-lg transition-all ${
                       selectedBlock === block
                         ? "bg-gradient-to-br from-blue-500 to-purple-500 text-white scale-105 shadow-lg"
                         : "bg-gray-800 hover:bg-gray-700 text-gray-300"
@@ -170,7 +170,7 @@ export default function JoinBet() {
                 min={betData.minDeposit.toNumber() / 1e9}
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-black/50 border border-gray-700  text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                 placeholder="0.1"
               />
             </div>
@@ -178,7 +178,7 @@ export default function JoinBet() {
             <button
               onClick={handleJoin}
               disabled={loading || selectedBlock === null}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/50"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-4 px-6  transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/50"
             >
               {loading ? "Joining..." : selectedBlock ? `Join with Block ${selectedBlock}` : "Select a Block"}
             </button>
