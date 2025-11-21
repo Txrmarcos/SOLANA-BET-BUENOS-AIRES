@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import DungeonLayout from "@/components/pixel-dungeon/DungeonLayout";
 import DungeonHeader from "@/components/pixel-dungeon/DungeonHeader";
@@ -8,14 +8,36 @@ import CreateBet from "@/components/CreateBet";
 import ManageBet from "@/components/ManageBet";
 import OpenBets from "@/components/OpenBets";
 import QuickPlayPixel from "@/components/QuickPlayPixel";
+import LandingPage from "@/components/LandingPage";
 import "@/styles/pixel-dungeon.css";
 
 type Tab = "browse" | "create" | "manage";
 
 function HomeContent() {
   const [activeTab, setActiveTab] = useState<Tab>("browse");
+  const [showLanding, setShowLanding] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const searchParams = useSearchParams();
   const betParam = searchParams.get("bet");
+
+  // Check if user has visited before (client-side only)
+  useEffect(() => {
+    setIsClient(true);
+    const visited = localStorage.getItem("pixel-dungeon-visited");
+    if (!visited) {
+      setShowLanding(true);
+    }
+  }, []);
+
+  const handleEnterApp = () => {
+    localStorage.setItem("pixel-dungeon-visited", "true");
+    setShowLanding(false);
+  };
+
+  // Show landing page on first visit
+  if (isClient && showLanding) {
+    return <LandingPage onEnter={handleEnterApp} />;
+  }
 
   // If there's a bet parameter, we're viewing a specific pool
   const isViewingPool = !!betParam;
