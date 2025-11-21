@@ -16,16 +16,18 @@ interface PoolInfo {
   status: string;
   lockTime: number;
   winnerBlock?: number;
+  myChosenBlock?: number;
 }
 
 export default function ManageBet() {
   const { connection } = useConnection();
   const { connected, publicKey } = useWallet();
-  const { revealWinner, cancelBet, getBetData } = useBlockBattle();
+  const { revealWinner, cancelBet, getBetData, claimWinnings } = useBlockBattle();
 
   const [loading, setLoading] = useState(false);
   const [searchingPools, setSearchingPools] = useState(false);
   const [myPools, setMyPools] = useState<PoolInfo[]>([]);
+  const [joinedPools, setJoinedPools] = useState<PoolInfo[]>([]);
   const [selectedPool, setSelectedPool] = useState<string | null>(null);
   const [poolDetails, setPoolDetails] = useState<any>(null);
   const [winningBlock, setWinningBlock] = useState<number | null>(null);
@@ -119,6 +121,68 @@ export default function ManageBet() {
     }
   };
 
+  // Find all pools where user participated as a player
+  const findJoinedPools = async () => {
+    if (!publicKey) return;
+
+    console.log("🔍 Searching for pools where you participated...");
+    setSearchingPools(true);
+
+    try {
+      // Get all bet accounts
+      const accounts = await connection.getProgramAccounts(PROGRAM_ID);
+      console.log(`📦 Found ${accounts.length} total pools`);
+
+      const joined: PoolInfo[] = [];
+
+      for (const account of accounts) {
+        try {
+          const betData = await getBetData(account.pubkey);
+
+          // Check if user is in players array
+          const playerIndex = betData.players.findIndex(
+            (player: PublicKey) => player.toBase58() === publicKey.toBase58()
+          );
+
+          if (playerIndex !== -1) {
+            // User is a player in this pool
+            const myBlock = betData.chosenBlocks[playerIndex];
+            const status = Object.keys(betData.status)[0];
+
+            joined.push({
+              address: account.pubkey.toBase58(),
+              totalPool: betData.totalPool.toNumber() / 1e9,
+              playerCount: betData.playerCount,
+              status,
+              lockTime: betData.lockTime.toNumber(),
+              winnerBlock: betData.winnerBlock,
+              myChosenBlock: myBlock,
+            });
+
+            console.log(`✅ Found pool ${account.pubkey.toBase58().slice(0, 8)}... - You chose block ${myBlock}`);
+          }
+        } catch (err) {
+          console.error("Error parsing joined pool:", err);
+        }
+      }
+
+      // Sort: revealed first (so user can see if they won), then by pool size
+      joined.sort((a, b) => {
+        if (a.status === 'revealed' && b.status !== 'revealed') return -1;
+        if (a.status !== 'revealed' && b.status === 'revealed') return 1;
+        return b.totalPool - a.totalPool;
+      });
+
+      setJoinedPools(joined);
+      console.log(`✅ You participated in ${joined.length} pools`);
+    } catch (error) {
+      console.error("Error finding joined pools:", error);
+      toast.error("Failed to load joined pools");
+    } finally {
+      setSearchingPools(false);
+    }
+  };
+
   // Load detailed data for selected pool
   const loadPoolDetails = async (address: string) => {
     try {
@@ -169,11 +233,16 @@ export default function ManageBet() {
     }
   };
 
+  const refreshAll = async () => {
+    await Promise.all([findMyPools(), findJoinedPools()]);
+  };
+
   useEffect(() => {
     if (connected && publicKey) {
-      findMyPools();
+      refreshAll();
     } else {
       setMyPools([]);
+      setJoinedPools([]);
       setSelectedPool(null);
       setPoolDetails(null);
     }
@@ -204,7 +273,7 @@ export default function ManageBet() {
             <p className="text-sm text-[#A1A1AA]">Select a pool to reveal winner or manage settings</p>
           </div>
           <button
-            onClick={findMyPools}
+            onClick={refreshAll}
             disabled={searchingPools}
             className="px-4 py-2 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white rounded-xl transition-all text-sm"
           >
@@ -279,6 +348,115 @@ export default function ManageBet() {
                 </div>
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Joined Pools Grid */}
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+        <h3 className="text-lg font-semibold text-white mb-4">Pools You Joined</h3>
+
+        {searchingPools ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mb-4"></div>
+            <p className="text-[#A1A1AA]">Loading joined pools...</p>
+          </div>
+        ) : joinedPools.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4">🎯</div>
+            <p className="text-[#A1A1AA] mb-2">You haven't joined any pools yet</p>
+            <p className="text-sm text-[#71717A]">Browse pools in the "Browse" tab to join</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {joinedPools.map((pool) => {
+              const didWin = pool.status === 'revealed' && pool.winnerBlock === pool.myChosenBlock;
+
+              return (
+                <div
+                  key={pool.address}
+                  className={`p-5 rounded-xl border transition-all ${
+                    didWin
+                      ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/50"
+                      : "bg-white/[0.02] border-white/[0.06]"
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      pool.status === 'open' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                      pool.status === 'revealed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                      'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {pool.status.toUpperCase()}
+                    </span>
+                    {didWin && (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                        🏆 WON
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-[#A1A1AA] mb-1">Total Pool</p>
+                      <p className="text-white font-bold text-lg">
+                        {pool.totalPool.toFixed(4)} SOL
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-[#A1A1AA]">Your Block</p>
+                        <p className="text-cyan-400 font-bold text-xl">{pool.myChosenBlock}</p>
+                      </div>
+                      {pool.winnerBlock && (
+                        <div>
+                          <p className="text-xs text-[#A1A1AA]">Winner</p>
+                          <p className={`font-bold text-xl ${
+                            didWin ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {pool.winnerBlock}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-[#A1A1AA]">Players</p>
+                      <p className="text-white font-semibold">{pool.playerCount}</p>
+                    </div>
+                  </div>
+
+                  {didWin && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          setLoading(true);
+                          const betPDA = new PublicKey(pool.address);
+                          await claimWinnings(betPDA);
+                          await refreshAll();
+                          toast.success("Winnings claimed! 🎉");
+                        } catch (error) {
+                          console.error(error);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading}
+                      className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30"
+                    >
+                      {loading ? "Claiming..." : "Claim Winnings 💰"}
+                    </button>
+                  )}
+
+                  <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                    <p className="text-xs text-[#71717A] font-mono truncate">
+                      {pool.address.slice(0, 8)}...{pool.address.slice(-8)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

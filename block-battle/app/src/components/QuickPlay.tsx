@@ -35,6 +35,7 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
   const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
   const [activePool, setActivePool] = useState<ActivePool | null>(null);
   const [hasJoined, setHasJoined] = useState(false);
+  const [myChosenBlock, setMyChosenBlock] = useState<number | null>(null);
 
   // Find the most popular open bet
   const findActivePool = async () => {
@@ -149,6 +150,12 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
       setActivePool(pool);
       console.log("✅ Loaded specific bet:", pool);
+
+      // Check if user already joined this pool
+      if (publicKey) {
+        await checkIfJoined(address);
+      }
+
       setSearching(false);
     } catch (error) {
       console.error("Error loading specific bet:", error);
@@ -157,21 +164,50 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
     }
   };
 
-  // Check if user already joined
+  // Check if user already joined and get their chosen block
   const checkIfJoined = async (poolAddress: string) => {
-    if (!publicKey) return false;
+    if (!publicKey) {
+      console.log("❌ Cannot check if joined - no public key");
+      return false;
+    }
 
     try {
+      console.log("🔍 Checking if user joined pool:", poolAddress);
       const betData = await getBetData(new PublicKey(poolAddress));
-      if (!betData) return false;
 
-      // Check if publicKey is in players list
-      const joined = betData.players.some(
+      if (!betData) {
+        console.log("❌ No bet data found");
+        return false;
+      }
+
+      console.log("📋 Bet data:", {
+        players: betData.players.map((p: PublicKey) => p.toBase58()),
+        chosenBlocks: betData.chosenBlocks,
+        myKey: publicKey.toBase58()
+      });
+
+      // Find player index
+      const playerIndex = betData.players.findIndex(
         (player: PublicKey) => player.toBase58() === publicKey.toBase58()
       );
-      setHasJoined(joined);
-      return joined;
+
+      console.log("🔎 Player index:", playerIndex);
+
+      if (playerIndex !== -1) {
+        // User has joined - get their chosen block
+        const chosenBlock = betData.chosenBlocks[playerIndex];
+        setHasJoined(true);
+        setMyChosenBlock(chosenBlock);
+        console.log(`✅ You already joined this pool with block ${chosenBlock}`);
+        return true;
+      } else {
+        setHasJoined(false);
+        setMyChosenBlock(null);
+        console.log("ℹ️ You haven't joined this pool yet");
+        return false;
+      }
     } catch (error) {
+      console.error("❌ Error checking if joined:", error);
       return false;
     }
   };
@@ -199,7 +235,10 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
 
   useEffect(() => {
     if (activePool && publicKey) {
+      console.log("🔄 Checking if user joined pool:", activePool.address);
       checkIfJoined(activePool.address);
+    } else if (activePool && !publicKey) {
+      console.log("⚠️ Pool loaded but wallet not connected - cannot check if joined");
     }
   }, [activePool, publicKey]);
 
@@ -329,49 +368,84 @@ export default function QuickPlay({ betAddress }: QuickPlayProps) {
         </div>
       </div>
 
+      {/* Already Joined Message */}
+      {hasJoined && myChosenBlock && (
+        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+          <p className="text-green-400 font-semibold text-center flex items-center justify-center gap-2">
+            <span className="text-xl">✓</span>
+            You already joined with Block {myChosenBlock}
+          </p>
+        </div>
+      )}
+
       {/* Block Selection */}
       <div className="mb-8">
         <label className="block text-lg font-semibold text-white mb-6 text-center tracking-tight">
-          Choose Your Block
+          {hasJoined ? "Your Chosen Block" : "Choose Your Block"}
         </label>
         <div className="grid grid-cols-5 gap-2.5">
-          {Array.from({ length: TOTAL_BLOCKS }, (_, i) => i + 1).map((block) => (
-            <button
-              key={block}
-              onClick={() => setSelectedBlock(block)}
-              className={`aspect-square rounded-xl font-bold text-lg transition-all ${
-                selectedBlock === block
-                  ? "bg-gradient-to-br from-purple-500 to-cyan-500 text-white scale-105 shadow-lg shadow-purple-500/50 border border-purple-400/50"
-                  : "bg-white/[0.03] hover:bg-white/[0.06] text-[#A1A1AA] hover:text-white border border-white/[0.06] hover:border-purple-500/30"
-              }`}
-            >
-              {block}
-            </button>
-          ))}
+          {Array.from({ length: TOTAL_BLOCKS }, (_, i) => i + 1).map((block) => {
+            const isMyBlock = hasJoined && block === myChosenBlock;
+            const isSelected = selectedBlock === block;
+
+            return (
+              <button
+                key={block}
+                onClick={() => !hasJoined && setSelectedBlock(block)}
+                disabled={hasJoined}
+                className={`aspect-square rounded-xl font-bold text-lg transition-all ${
+                  isMyBlock
+                    ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white scale-105 shadow-lg shadow-green-500/50 border-2 border-green-400 ring-2 ring-green-400/30"
+                    : isSelected
+                    ? "bg-gradient-to-br from-purple-500 to-cyan-500 text-white scale-105 shadow-lg shadow-purple-500/50 border border-purple-400/50"
+                    : hasJoined
+                    ? "bg-white/[0.02] text-[#52525B] border border-white/[0.04] cursor-not-allowed opacity-50"
+                    : "bg-white/[0.03] hover:bg-white/[0.06] text-[#A1A1AA] hover:text-white border border-white/[0.06] hover:border-purple-500/30"
+                }`}
+              >
+                {block}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Play Button */}
-      <button
-        onClick={handleQuickPlay}
-        disabled={loading || selectedBlock === null}
-        className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold text-lg py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
-      >
-        {loading ? (
-          <span className="flex items-center justify-center gap-3">
-            <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-            Joining...
-          </span>
-        ) : selectedBlock ? (
-          `Play Block ${selectedBlock}`
-        ) : (
-          "Select a Block"
-        )}
-      </button>
+      {hasJoined ? (
+        <div className="space-y-4">
+          <div className="p-4 bg-white/[0.02] border border-white/[0.06] rounded-xl text-center">
+            <p className="text-[#A1A1AA] text-sm">
+              Waiting for arbiter to reveal the winner...
+            </p>
+          </div>
+          <p className="text-center text-[#71717A] text-xs">
+            Winners will be able to claim their prizes after the reveal
+          </p>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={handleQuickPlay}
+            disabled={loading || selectedBlock === null}
+            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold text-lg py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Joining...
+              </span>
+            ) : selectedBlock ? (
+              `Play Block ${selectedBlock}`
+            ) : (
+              "Select a Block"
+            )}
+          </button>
 
-      <p className="text-center text-[#71717A] text-xs mt-6">
-        Multiple winners split the prize pool proportionally
-      </p>
+          <p className="text-center text-[#71717A] text-xs mt-6">
+            Multiple winners split the prize pool proportionally
+          </p>
+        </>
+      )}
     </div>
   );
 }
