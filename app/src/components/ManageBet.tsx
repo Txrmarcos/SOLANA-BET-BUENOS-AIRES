@@ -32,6 +32,7 @@ export default function ManageBet() {
   const [selectedPool, setSelectedPool] = useState<string | null>(null);
   const [poolDetails, setPoolDetails] = useState<any>(null);
   const [winningBlock, setWinningBlock] = useState<number | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Find all pools created by the connected user
   const findMyPools = useCallback(async () => {
@@ -234,20 +235,34 @@ export default function ManageBet() {
   }, [publicKey, connection]);
 
   // Load detailed data for selected pool
-  const loadPoolDetails = async (address: string) => {
+  const loadPoolDetails = useCallback(async (address: string) => {
+    if (loading || searchingPools) {
+      console.log("⏸️ Skipping loadPoolDetails - already loading");
+      return;
+    }
+
+    console.log("🔍 Loading pool details for:", address);
     try {
       setLoading(true);
       const betPDA = new PublicKey(address);
       const data = await getBetData(betPDA);
+
+      if (!data) {
+        throw new Error("Pool data not found");
+      }
+
+      console.log("✅ Pool details loaded:", data);
       setPoolDetails(data);
       setSelectedPool(address);
     } catch (error) {
-      console.error("Error loading pool details:", error);
+      console.error("❌ Error loading pool details:", error);
       toast.error("Failed to load pool details");
+      setSelectedPool(null);
+      setPoolDetails(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getBetData, loading, searchingPools]);
 
   const handleReveal = async () => {
     if (!selectedPool || winningBlock === null) return;
@@ -284,19 +299,34 @@ export default function ManageBet() {
   };
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([findMyPools(), findJoinedPools()]);
+    console.log("🔄 Refreshing all pools...");
+    setSearchingPools(true);
+    try {
+      await Promise.all([findMyPools(), findJoinedPools()]);
+      setHasLoadedOnce(true);
+    } finally {
+      setSearchingPools(false);
+    }
   }, [findMyPools, findJoinedPools]);
 
+  const manualRefresh = useCallback(async () => {
+    console.log("🔄 Manual refresh triggered");
+    await refreshAll();
+  }, [refreshAll]);
+
   useEffect(() => {
-    if (connected && publicKey) {
+    if (connected && publicKey && !hasLoadedOnce) {
+      console.log("🚀 Initial load of pools");
       refreshAll();
-    } else {
+    } else if (!connected || !publicKey) {
+      console.log("👋 Wallet disconnected, clearing data");
       setMyPools([]);
       setJoinedPools([]);
       setSelectedPool(null);
       setPoolDetails(null);
+      setHasLoadedOnce(false);
     }
-  }, [connected, publicKey, refreshAll]);
+  }, [connected, publicKey, hasLoadedOnce, refreshAll]);
 
   if (!connected) {
     return (
@@ -332,9 +362,9 @@ export default function ManageBet() {
               <p className="text-sm pixel-font text-purple-300">Manage your quests & reveal treasures</p>
             </div>
             <button
-              onClick={refreshAll}
-              disabled={searchingPools}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white pixel-font text-xs rounded-xl transition-all border-2 border-purple-400 shadow-lg"
+              onClick={manualRefresh}
+              disabled={searchingPools || loading}
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white pixel-font text-xs rounded-xl transition-all border-2 border-purple-400 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {searchingPools ? "LOADING..." : "🔄 REFRESH"}
             </button>
@@ -513,7 +543,7 @@ export default function ManageBet() {
                               setLoading(true);
                               const betPDA = new PublicKey(pool.address);
                               await claimWinnings(betPDA);
-                              await refreshAll();
+                              await findJoinedPools();
                               toast.success("Treasure claimed! 🎉");
                             } catch (error) {
                               console.error(error);
