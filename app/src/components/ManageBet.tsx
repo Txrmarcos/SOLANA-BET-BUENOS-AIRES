@@ -5,8 +5,8 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { PROGRAM_ID } from "@/lib/anchor";
+import { betsCache } from "@/lib/betsCache";
 import toast from "react-hot-toast";
-import { getExplorerAddressUrl } from "@/lib/explorer";
 
 const TOTAL_BLOCKS = 25;
 
@@ -37,13 +37,31 @@ export default function ManageBet() {
   const hasLoadedRef = useRef(false);
 
   // Find all pools created by the connected user
-  const findMyPools = useCallback(async () => {
+  const findMyPools = useCallback(async (forceRefresh = false) => {
     if (!publicKey) return;
 
-    console.log("🔍 Searching for pools created by:", publicKey.toBase58());
+    const walletAddress = publicKey.toBase58();
+
+    // Check cache first
+    if (!forceRefresh) {
+      const cachedPools = betsCache.getMyPools(walletAddress);
+      if (cachedPools) {
+        setMyPools(cachedPools);
+        return;
+      }
+    }
+
+    // Check if already loading
+    if (betsCache.isLoading(`myPools-${walletAddress}`)) {
+      console.log("⏸️ Already loading pools, skipping...");
+      return;
+    }
+
+    console.log("🔍 Searching for pools created by:", walletAddress);
     setSearchingPools(true);
 
     try {
+      const pools = await betsCache.dedupeRequest(`myPools-${walletAddress}`, async () => {
       const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
         filters: [
           {
@@ -106,13 +124,18 @@ export default function ManageBet() {
         }
       }
 
-      // Sort by status (open first) then by player count
-      pools.sort((a, b) => {
-        if (a.status === 'open' && b.status !== 'open') return -1;
-        if (a.status !== 'open' && b.status === 'open') return 1;
-        return b.playerCount - a.playerCount;
+        // Sort by status (open first) then by player count
+        pools.sort((a, b) => {
+          if (a.status === 'open' && b.status !== 'open') return -1;
+          if (a.status !== 'open' && b.status === 'open') return 1;
+          return b.playerCount - a.playerCount;
+        });
+
+        return pools;
       });
 
+      // Update cache
+      betsCache.setMyPools(walletAddress, pools);
       setMyPools(pools);
       console.log("✅ Loaded pools:", pools);
     } catch (error) {
@@ -127,41 +150,39 @@ export default function ManageBet() {
   const findJoinedPools = useCallback(async () => {
     if (!publicKey) return;
 
+    // Check if already searching
+    if (betsCache.isLoading(`joinedPools-${publicKey.toBase58()}`)) {
+      console.log("⏸️ Already searching for joined pools...");
+      return;
+    }
+
     console.log("🔍 Searching for pools where you participated...");
     setSearchingPools(true);
 
     try {
-      // Get all bet accounts - use smaller dataSlice
-      const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
-        dataSlice: {
-          offset: 0,
-          length: 120, // Just get metadata, not player arrays
-        },
-      });
+      const joined = await betsCache.dedupeRequest(`joinedPools-${publicKey.toBase58()}`, async () => {
+        // Get all bet accounts - NO dataSlice, we need full data
+        const accounts = await connection.getProgramAccounts(PROGRAM_ID);
 
-      console.log(`📦 Found ${accounts.length} total pools`);
+        console.log(`📦 Found ${accounts.length} total pools`);
 
-      const joined: PoolInfo[] = [];
+        const foundPools: PoolInfo[] = [];
 
-      // Limit drastically to avoid freeze
-      const MAX_ACCOUNTS = 20;
-      const accountsToCheck = accounts.slice(0, MAX_ACCOUNTS);
+        // Limit to last 20 accounts (most recent)
+        const MAX_ACCOUNTS = 20;
+        const accountsToCheck = accounts.slice(-MAX_ACCOUNTS);
 
-      // Process in small batches to avoid blocking
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < accountsToCheck.length; i += BATCH_SIZE) {
-        const batch = accountsToCheck.slice(i, i + BATCH_SIZE);
+        // Process in small batches to avoid blocking
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < accountsToCheck.length; i += BATCH_SIZE) {
+          const batch = accountsToCheck.slice(i, i + BATCH_SIZE);
 
-        // Give browser time to breathe
-        await new Promise(resolve => setTimeout(resolve, 0));
+          // Give browser time to breathe
+          await new Promise(resolve => setTimeout(resolve, 0));
 
-        for (const account of batch) {
-          try {
-            // Fetch full account data only for accounts we're checking
-            const fullAccount = await connection.getAccountInfo(account.pubkey);
-            if (!fullAccount) continue;
-
-            const data = fullAccount.data;
+          for (const account of batch) {
+            try {
+              const data = account.account.data;
 
             // Parse bytes directly
             let offset = 8 + 32 + 32 + 8; // Skip to total_pool
@@ -218,7 +239,7 @@ export default function ManageBet() {
 
               const statusStr = status === 0 ? 'open' : status === 1 ? 'revealed' : 'cancelled';
 
-              joined.push({
+              foundPools.push({
                 address: account.pubkey.toBase58(),
                 totalPool: totalPool / 1e9,
                 playerCount,
@@ -230,21 +251,24 @@ export default function ManageBet() {
 
               console.log(`✅ Found pool - You chose block ${block}`);
             }
-          } catch (err) {
-            // Silently skip errored pools
+            } catch (err) {
+              // Silently skip errored pools
+            }
           }
         }
-      }
 
-      // Sort: revealed first, then by pool size
-      joined.sort((a, b) => {
-        if (a.status === 'revealed' && b.status !== 'revealed') return -1;
-        if (a.status !== 'revealed' && b.status === 'revealed') return 1;
-        return b.totalPool - a.totalPool;
+        // Sort: revealed first, then by pool size
+        foundPools.sort((a, b) => {
+          if (a.status === 'revealed' && b.status !== 'revealed') return -1;
+          if (a.status !== 'revealed' && b.status === 'revealed') return 1;
+          return b.totalPool - a.totalPool;
+        });
+
+        console.log(`✅ You participated in ${foundPools.length} pools`);
+        return foundPools;
       });
 
       setJoinedPools(joined);
-      console.log(`✅ You participated in ${joined.length} pools`);
     } catch (error) {
       console.error("Error finding joined pools:", error);
       toast.error("Failed to load joined pools");
@@ -364,6 +388,18 @@ export default function ManageBet() {
     hasLoadedRef.current = false; // Allow manual refresh
     await refreshAll();
   }, [refreshAll]);
+
+  // Initialize from cache on mount
+  useEffect(() => {
+    if (connected && publicKey) {
+      const cachedPools = betsCache.getMyPools(publicKey.toBase58());
+      if (cachedPools) {
+        console.log("📦 Loading pools from cache");
+        setMyPools(cachedPools);
+        hasLoadedRef.current = true;
+      }
+    }
+  }, [connected, publicKey]);
 
   useEffect(() => {
     if (connected && publicKey && !hasLoadedRef.current && !isLoadingRef.current) {
@@ -514,25 +550,32 @@ export default function ManageBet() {
         </div>
       </div>
 
-      {/* Joined Pools Grid - DISABLED FOR PERFORMANCE */}
+      {/* Joined Pools Grid - Now using cache! */}
       <div className="bg-gradient-to-br from-[#0f0f1e] to-[#1a1a2e] border-4 border-cyan-500/30 rounded-2xl p-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/stone-texture.png')] opacity-5"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-3xl">🎯</span>
             <h3 className="text-xl pixel-font text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">YOUR QUESTS</h3>
+            <button
+              onClick={() => findJoinedPools()}
+              disabled={searchingPools}
+              className="ml-auto px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 pixel-font text-xs rounded-lg transition-all disabled:opacity-50"
+            >
+              {searchingPools ? "LOADING..." : "🔍 SEARCH"}
+            </button>
           </div>
 
-          {false && searchingPools ? (
+          {searchingPools ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-4 border-cyan-500 mb-4"></div>
               <p className="pixel-font text-cyan-300">Loading your quests...</p>
             </div>
           ) : joinedPools.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-5xl mb-4">🗺️</div>
-              <p className="pixel-font text-cyan-300 mb-2">QUEST TRACKING DISABLED</p>
-              <p className="text-sm pixel-font text-purple-300">Check 🗺️ Browse tab to see all pools</p>
+              <div className="text-5xl mb-4">🎯</div>
+              <p className="pixel-font text-cyan-300 mb-2">NO QUESTS FOUND</p>
+              <p className="text-sm pixel-font text-purple-300">Click 🔍 SEARCH above to find your participated dungeons</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID } from "@/lib/anchor";
+import { betsCache } from "@/lib/betsCache";
 
 interface OpenBet {
   address: string;
@@ -13,7 +14,6 @@ interface OpenBet {
   isAutomatic: boolean;
 }
 
-const CACHE_DURATION_MS = 30000; // Cache por 30 segundos
 const MAX_RESULTS = 50; // Limitar resultados
 
 export function useBetsList() {
@@ -22,20 +22,27 @@ export function useBetsList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cache simples
-  const cacheRef = useRef<{
-    data: OpenBet[];
-    timestamp: number;
-  } | null>(null);
+  // Initialize from cache on mount
+  useEffect(() => {
+    const cachedBets = betsCache.getOpenBets();
+    if (cachedBets) {
+      setBets(cachedBets);
+    }
+  }, []);
 
   const loadOpenBets = useCallback(async (forceRefresh = false) => {
-    // Retornar do cache se ainda válido
-    if (!forceRefresh && cacheRef.current) {
-      const age = Date.now() - cacheRef.current.timestamp;
-      if (age < CACHE_DURATION_MS) {
-        console.log("📦 Retornando bets do cache (idade:", age, "ms)");
-        setBets(cacheRef.current.data);
-        return cacheRef.current.data;
+    // Check if already loading
+    if (!forceRefresh && betsCache.isLoading("openBets")) {
+      console.log("⏸️ Request already in progress, skipping...");
+      return [];
+    }
+
+    // Return from global cache if valid
+    if (!forceRefresh) {
+      const cachedBets = betsCache.getOpenBets();
+      if (cachedBets) {
+        setBets(cachedBets);
+        return cachedBets;
       }
     }
 
@@ -43,6 +50,8 @@ export function useBetsList() {
     setError(null);
 
     try {
+      // Use deduplication to prevent concurrent requests
+      const openBets = await betsCache.dedupeRequest("openBets", async () => {
 
       // Calcular offset para o campo status (Open = 0)
       // discriminator(8) + creator(32) + arbiter(32) + min_deposit(8) +
@@ -53,18 +62,11 @@ export function useBetsList() {
       const startTime = Date.now();
 
       // Buscar todas as contas abertas (status = 0)
-      const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [
-          {
-            memcmp: {
-              offset: STATUS_OFFSET,
-              bytes: "1", // Base58 encoding de 0 = "1"
-            },
-          },
-        ],
-      });
+      // NOTE: Removido filtro de status para pegar TODAS as contas
+      // Vamos filtrar manualmente depois para debug
+      const accounts = await connection.getProgramAccounts(PROGRAM_ID);
 
-      console.log(`✅ Encontradas ${accounts.length} contas em ${Date.now() - startTime}ms`);
+      console.log(`✅ Encontradas ${accounts.length} contas TOTAIS em ${Date.now() - startTime}ms`);
 
       // Limitar resultados
       const limitedAccounts = accounts.slice(0, MAX_RESULTS);
@@ -100,6 +102,7 @@ export function useBetsList() {
           offset += hasWinnerBlock === 1 ? 2 : 1;
 
           const status = data.readUInt8(offset);
+          const statusByte = data.readUInt8(offset);
           offset += 1;
 
           const playerCount = data.readUInt8(offset);
@@ -109,8 +112,12 @@ export function useBetsList() {
 
           const isAutomatic = data.readUInt8(offset) === 1;
 
+          const poolAddress = account.pubkey.toBase58().slice(0, 8);
+          console.log(`📊 Pool ${poolAddress}: status=${status} (byte: 0x${statusByte.toString(16)}), players=${playerCount}, pool=${totalPool / 1e9}, auto=${isAutomatic}`);
+
           // Só adicionar se status for Open (0)
           if (status === 0) {
+            console.log(`✅ Pool OPEN adicionado: ${account.pubkey.toBase58().slice(0, 8)}`);
             openBets.push({
               address: account.pubkey.toBase58(),
               creator,
@@ -120,23 +127,24 @@ export function useBetsList() {
               lockTime,
               isAutomatic,
             });
+          } else {
+            console.log(`❌ Pool IGNORADO (status ${status}): ${account.pubkey.toBase58().slice(0, 8)}`);
           }
         } catch (err) {
           console.warn("⚠️ Erro ao parsear conta:", account.pubkey.toBase58(), err);
         }
       }
 
-      // Ordenar por lockTime (mais recentes primeiro)
-      openBets.sort((a, b) => b.lockTime - a.lockTime);
+        // Ordenar por lockTime (mais recentes primeiro)
+        openBets.sort((a, b) => b.lockTime - a.lockTime);
 
-      console.log(`✅ Processadas ${openBets.length} apostas válidas`);
+        console.log(`✅ Processadas ${openBets.length} apostas válidas`);
 
-      // Atualizar cache
-      cacheRef.current = {
-        data: openBets,
-        timestamp: Date.now(),
-      };
+        return openBets;
+      });
 
+      // Update global cache
+      betsCache.setOpenBets(openBets);
       setBets(openBets);
       return openBets;
     } catch (err: any) {
@@ -149,7 +157,7 @@ export function useBetsList() {
   }, [connection]);
 
   const invalidateCache = useCallback(() => {
-    cacheRef.current = null;
+    betsCache.invalidateOpenBets();
   }, []);
 
   return {

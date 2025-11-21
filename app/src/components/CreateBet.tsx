@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { betsCache } from "@/lib/betsCache";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -47,6 +48,12 @@ export default function CreateBet() {
       );
 
       if (result) {
+        // Invalidate caches so they refresh with the new bet
+        betsCache.invalidateOpenBets();
+        if (publicKey) {
+          betsCache.invalidateMyPools(publicKey.toBase58());
+        }
+
         // Generate shareable URL
         const shareUrl = `${window.location.origin}?bet=${result.betPDA.toBase58()}`;
 

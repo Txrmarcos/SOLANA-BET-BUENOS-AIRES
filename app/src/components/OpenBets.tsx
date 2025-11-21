@@ -10,6 +10,8 @@ export default function OpenBets() {
   const { bets, loading, error, loadOpenBets, invalidateCache } = useBetsList();
 
   useEffect(() => {
+    // Always try to load on mount to check for new data
+    // The hook will use cache if available and valid
     loadOpenBets();
   }, [loadOpenBets]);
 
