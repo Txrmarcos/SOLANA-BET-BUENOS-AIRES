@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import CreateBet from "@/components/CreateBet";
 import ManageBet from "@/components/ManageBet";
@@ -11,6 +12,15 @@ type Tab = "play" | "browse" | "create" | "manage";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("play");
+  const searchParams = useSearchParams();
+  const betParam = searchParams.get("bet");
+
+  // Auto-switch to play tab if bet parameter is present
+  useEffect(() => {
+    if (betParam) {
+      setActiveTab("play");
+    }
+  }, [betParam]);
 
   return (
     <div className="min-h-screen bg-[#050509] overflow-x-hidden">
@@ -126,7 +136,7 @@ export default function Home() {
       {/* Content */}
       <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="max-w-5xl mx-auto">
-          {activeTab === "play" && <QuickPlay />}
+          {activeTab === "play" && <QuickPlay betAddress={betParam} />}
           {activeTab === "browse" && <OpenBets />}
           {activeTab === "create" && <CreateBet />}
           {activeTab === "manage" && <ManageBet />}

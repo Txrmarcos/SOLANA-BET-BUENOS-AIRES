@@ -20,13 +20,16 @@ export function useBlockBattle() {
 
     try {
       const program = await getProgram(connection, wallet);
-      const [betPDA] = getBetPDA(wallet.publicKey);
+
+      // Generate unique seed using timestamp
+      const seed = BigInt(Date.now());
+      const [betPDA] = getBetPDA(wallet.publicKey, seed);
 
       const lockTime = Math.floor(Date.now() / 1000) + lockTimeSeconds;
       const minDeposit = new BN(minDepositSol * LAMPORTS_PER_SOL);
 
       const tx = await program.methods
-        .createBet(minDeposit, arbiter, new BN(lockTime))
+        .createBet(new BN(seed.toString()), minDeposit, arbiter, new BN(lockTime))
         .accounts({
           bet: betPDA,
           creator: wallet.publicKey,
@@ -37,7 +40,8 @@ export function useBlockBattle() {
       toast.success("Bet created successfully!");
       console.log("Transaction signature:", tx);
       console.log("Bet PDA:", betPDA.toBase58());
-      return { tx, betPDA };
+      console.log("Seed:", seed.toString());
+      return { tx, betPDA, seed };
     } catch (error: any) {
       console.error("Error creating bet:", error);
       const errorMsg = error?.message || error?.toString() || "Failed to create bet";

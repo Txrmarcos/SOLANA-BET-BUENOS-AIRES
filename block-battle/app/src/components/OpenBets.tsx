@@ -62,8 +62,12 @@ export default function OpenBets() {
           const lockTime = Number(data.readBigInt64LE(offset));
           offset += 8;
 
-          // Skip winner_block (2 bytes)
-          offset += 2;
+          // winner_block is Option<u8> - check discriminant
+          const hasWinnerBlock = data.readUInt8(offset);
+          offset += 1;
+          if (hasWinnerBlock) {
+            offset += 1; // skip the value
+          }
 
           // Read status (1 byte)
           const status = data.readUInt8(offset);

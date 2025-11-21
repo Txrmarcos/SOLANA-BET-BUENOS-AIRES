@@ -13,6 +13,7 @@ pub mod block_battle {
     /// Create a new bet with initial parameters (MVP - 2 players minimum)
     pub fn create_bet(
         ctx: Context<CreateBet>,
+        seed: u64,
         min_deposit: u64,
         arbiter: Pubkey,
         lock_time: i64,
@@ -197,12 +198,13 @@ pub mod block_battle {
 }
 
 #[derive(Accounts)]
+#[instruction(seed: u64)]
 pub struct CreateBet<'info> {
     #[account(
         init,
         payer = creator,
         space = 8 + BetAccount::INIT_SPACE,
-        seeds = [b"bet", creator.key().as_ref()],
+        seeds = [b"bet", creator.key().as_ref(), &seed.to_le_bytes()],
         bump
     )]
     pub bet: Account<'info, BetAccount>,

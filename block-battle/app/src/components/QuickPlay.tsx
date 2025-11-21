@@ -17,8 +17,12 @@ interface ActivePool {
   lockTime: number;
 }
 
-export default function QuickPlay() {
-  console.log("🚀 QuickPlay component rendering");
+interface QuickPlayProps {
+  betAddress?: string | null;
+}
+
+export default function QuickPlay({ betAddress }: QuickPlayProps) {
+  console.log("🚀 QuickPlay component rendering", { betAddress });
 
   const { connection } = useConnection();
   const { connected, publicKey } = useWallet();
@@ -111,6 +115,48 @@ export default function QuickPlay() {
     }
   };
 
+  // Load specific bet from URL parameter
+  const loadSpecificBet = async (address: string) => {
+    console.log("🎯 Loading specific bet:", address);
+    try {
+      setSearching(true);
+      const betPDA = new PublicKey(address);
+      const betData = await getBetData(betPDA);
+
+      if (!betData) {
+        console.error("❌ Bet not found");
+        toast.error("Bet not found");
+        setSearching(false);
+        return;
+      }
+
+      // Check if bet is open
+      const status = Object.keys(betData.status)[0];
+      if (status !== 'open') {
+        console.error("❌ Bet is not open");
+        toast.error("This bet is no longer accepting players");
+        setSearching(false);
+        return;
+      }
+
+      const pool: ActivePool = {
+        address: address,
+        minDeposit: betData.minDeposit.toNumber() / 1e9,
+        totalPool: betData.totalPool.toNumber() / 1e9,
+        playerCount: betData.playerCount,
+        lockTime: betData.lockTime.toNumber(),
+      };
+
+      setActivePool(pool);
+      console.log("✅ Loaded specific bet:", pool);
+      setSearching(false);
+    } catch (error) {
+      console.error("Error loading specific bet:", error);
+      toast.error("Failed to load bet");
+      setSearching(false);
+    }
+  };
+
   // Check if user already joined
   const checkIfJoined = async (poolAddress: string) => {
     if (!publicKey) return false;
@@ -131,8 +177,13 @@ export default function QuickPlay() {
   };
 
   useEffect(() => {
-    console.log("🎮 QuickPlay mounted, connected:", connected);
-    if (connected) {
+    console.log("🎮 QuickPlay mounted, connected:", connected, "betAddress:", betAddress);
+
+    if (betAddress) {
+      // Load specific bet from URL
+      loadSpecificBet(betAddress);
+    } else if (connected) {
+      // Find active pool normally
       findActivePool().catch(err => {
         console.error("❌ Error in findActivePool:", err);
         setSearching(false);
@@ -144,7 +195,7 @@ export default function QuickPlay() {
     } else {
       setSearching(false);
     }
-  }, [connected]);
+  }, [connected, betAddress]);
 
   useEffect(() => {
     if (activePool && publicKey) {

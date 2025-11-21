@@ -71,9 +71,12 @@ export async function getProgram(connection: Connection, wallet: AnchorWallet): 
   }
 }
 
-export function getBetPDA(creator: PublicKey): [PublicKey, number] {
+export function getBetPDA(creator: PublicKey, seed: number | bigint): [PublicKey, number] {
+  const seedBuffer = Buffer.alloc(8);
+  seedBuffer.writeBigUInt64LE(BigInt(seed));
+
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("bet"), creator.toBuffer()],
+    [Buffer.from("bet"), creator.toBuffer(), seedBuffer],
     PROGRAM_ID
   );
 }
