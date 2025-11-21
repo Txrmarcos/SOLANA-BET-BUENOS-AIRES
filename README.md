@@ -426,6 +426,8 @@ npm run test
 
 ### Additional Resources
 
+- [PITCH_DECK.pptx](PITCH_DECK.pptx) - Complete pitch deck for corporate presentations (40+ slides)
+- [PIXEL_DUNGEON_FLOW.md](PIXEL_DUNGEON_FLOW.md) - Complete game flow with step-by-step walkthrough
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Data architecture and design decisions
 - [PAYOUT_EXAMPLES.md](PAYOUT_EXAMPLES.md) - Proportional payout system examples
 - [Frontend README](app/README.md) - Detailed frontend documentation
