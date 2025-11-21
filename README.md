@@ -471,14 +471,7 @@ npm run test
 - Add caching layer for better UX
 - Optimize RPC calls with batching
 - Implement pagination for large bet lists
-
-## 👥 Team
-
-Built with ❤️ by **[Your Team Name]** for Solana Hacker Hotel DevCon 2025
-
-- **Developer**: [Your Name]
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **Twitter**: [@yourtwitter](https://twitter.com/yourtwitter)
+  
 
 ## 📄 License
 
