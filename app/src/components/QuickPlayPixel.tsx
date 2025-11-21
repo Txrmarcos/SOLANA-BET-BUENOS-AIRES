@@ -174,10 +174,19 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
     try {
       const poolPDA = new PublicKey(activePool.address);
       await joinBet(poolPDA, selectedBlock, parseFloat(depositAmount));
+
+      // Update state immediately
+      setHasJoined(true);
+      setMyChosenBlock(selectedBlock);
+
+      // Then reload pool data to confirm
       await loadPoolData(activePool.address);
       toast.success(`Entered dungeon with Door ${selectedBlock}! 🗝️`);
     } catch (error) {
       console.error(error);
+      // Revert state on error
+      setHasJoined(false);
+      setMyChosenBlock(null);
     } finally {
       setLoading(false);
     }
@@ -213,11 +222,18 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
           newStates[i] = "idle";
         }
       } else {
-        newStates[i] = i === selectedBlock ? "selected" : "idle";
+        // Show purchased state if user has joined and this is their block
+        if (hasJoined && i === myChosenBlock) {
+          newStates[i] = "purchased";
+        } else if (i === selectedBlock) {
+          newStates[i] = "selected";
+        } else {
+          newStates[i] = "idle";
+        }
       }
     }
     setDoorStates(newStates);
-  }, [selectedBlock, isRevealing, winnerBlock]);
+  }, [selectedBlock, hasJoined, myChosenBlock, isRevealing, winnerBlock]);
 
   // Reveal animation
   useEffect(() => {

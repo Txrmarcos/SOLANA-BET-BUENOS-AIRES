@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 
-export type DoorState = "idle" | "selected" | "opening" | "trapped" | "revealed-winner" | "revealed-loser";
+export type DoorState = "idle" | "selected" | "purchased" | "opening" | "trapped" | "revealed-winner" | "revealed-loser";
 export type TrapType = "arrow" | "poison" | "skeleton" | "slime" | "spikes" | "curse";
 
 interface PixelDoorProps {
@@ -65,6 +65,80 @@ export default function PixelDoor({
     >
       {/* Door Container */}
       <div className="relative w-full h-full pixel-art">
+
+        {/* PURCHASED State - Clearly show user owns this door */}
+        {state === "purchased" && (
+          <motion.div
+            className="relative w-full h-full"
+            animate={{
+              y: [-2, 0, -2],
+            }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+          >
+            {/* Door Background with GREEN tint */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#2d5016] to-[#1a3010] rounded-lg border-4 border-green-500 shadow-2xl shadow-green-500/50">
+              {/* Wood Texture */}
+              <div className="absolute inset-2 bg-[#2d3d1f] opacity-30"
+                   style={{
+                     backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 4px, #1a3010 4px, #1a3010 8px)`
+                   }}
+              />
+
+              {/* Door Planks */}
+              <div className="absolute inset-0 flex flex-col justify-around p-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-1 bg-green-900 opacity-50" />
+                ))}
+              </div>
+
+              {/* Metal Bands - Gold for owned */}
+              <div className="absolute left-1 right-1 top-[20%] h-2 bg-gradient-to-r from-[#d4af37] via-[#f4e76b] to-[#d4af37] shadow-inner" />
+              <div className="absolute left-1 right-1 bottom-[20%] h-2 bg-gradient-to-r from-[#d4af37] via-[#f4e76b] to-[#d4af37] shadow-inner" />
+
+              {/* Door Handle - Gold */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-br from-[#ffd700] to-[#d4af37] shadow-lg" />
+
+              {/* Block Number */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-3xl font-bold text-[#4ade80] pixel-font drop-shadow-[0_0_12px_rgba(74,222,128,1)]"
+                      style={{ textShadow: "2px 2px 0px #1a3010, 0 0 10px #4ade80" }}>
+                  {blockNumber}
+                </span>
+              </div>
+
+              {/* Purchased Badge */}
+              <div className="absolute -top-3 -right-3 bg-gradient-to-br from-green-500 to-emerald-600 text-white pixel-font text-xs px-2 py-1 rounded-full border-2 border-yellow-400 shadow-lg">
+                ✓ YOURS
+              </div>
+
+              {/* Pulsing Glow */}
+              <motion.div
+                className="absolute -inset-1 rounded-lg border-4 border-green-400"
+                animate={{
+                  opacity: [0.6, 1, 0.6],
+                  boxShadow: [
+                    "0 0 20px rgba(74, 222, 128, 0.6)",
+                    "0 0 40px rgba(74, 222, 128, 1)",
+                    "0 0 20px rgba(74, 222, 128, 0.6)"
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+
+              {/* Sparkles */}
+              <motion.div
+                className="absolute -top-2 left-1/2 -translate-x-1/2 text-2xl"
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                  scale: [0.8, 1.2, 0.8],
+                }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                ✨
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
 
         {/* IDLE or SELECTED State */}
         {(state === "idle" || state === "selected") && (

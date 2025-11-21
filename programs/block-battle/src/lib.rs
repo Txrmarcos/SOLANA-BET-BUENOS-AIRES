@@ -193,23 +193,36 @@ pub mod block_battle {
         require!(!bet.claimed[idx], BetError::AlreadyClaimed);
 
         let winning_block = bet.winner_block.ok_or(BetError::WinnerNotRevealed)?;
-        require!(bet.chosen_blocks[idx] == winning_block, BetError::NotAWinner);
-
-        // Calculate proportional payout
         let player_deposit = bet.deposits[idx];
-        let mut total_winner_deposits = 0u64;
 
+        // Count total deposits from winners
+        let mut total_winner_deposits = 0u64;
         for i in 0..bet.player_count as usize {
             if bet.chosen_blocks[i] == winning_block {
                 total_winner_deposits += bet.deposits[i];
             }
         }
 
-        let payout = (bet.total_pool as u128)
-            .checked_mul(player_deposit as u128)
-            .unwrap()
-            .checked_div(total_winner_deposits as u128)
-            .unwrap() as u64;
+        let payout: u64;
+
+        // If no one picked the winning block, refund all players their deposits
+        if total_winner_deposits == 0 {
+            msg!("No winner! Refunding deposits to all players");
+            payout = player_deposit; // Everyone gets their money back
+        } else {
+            // Normal case: player must be a winner
+            require!(bet.chosen_blocks[idx] == winning_block, BetError::NotAWinner);
+
+            // Calculate proportional payout based on winner's share
+            payout = (bet.total_pool as u128)
+                .checked_mul(player_deposit as u128)
+                .unwrap()
+                .checked_div(total_winner_deposits as u128)
+                .unwrap() as u64;
+
+            msg!("Player {} won! Claiming {} lamports", player.key(), payout);
+            msg!("Share: {}/{} of total pool", player_deposit, total_winner_deposits);
+        }
 
         // Transfer payout
         **bet.to_account_info().try_borrow_mut_lamports()? -= payout;
@@ -217,8 +230,9 @@ pub mod block_battle {
 
         bet.claimed[idx] = true;
 
-        msg!("Player {} claimed {} lamports", player.key(), payout);
-        msg!("Share: {}/{} of total pool", player_deposit, total_winner_deposits);
+        if total_winner_deposits == 0 {
+            msg!("Refunded {} lamports to {}", payout, player.key());
+        }
 
         Ok(())
     }
