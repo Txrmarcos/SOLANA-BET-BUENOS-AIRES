@@ -6,6 +6,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { PROGRAM_ID } from "@/lib/anchor";
 import { betsCache } from "@/lib/betsCache";
+import { getExplorerUrl } from "@/lib/explorer";
 import toast from "react-hot-toast";
 
 const TOTAL_BLOCKS = 25;
@@ -20,6 +21,7 @@ interface PoolInfo {
   myChosenBlock?: number;
   alreadyClaimed?: boolean;
   myDeposit?: number; // How much the user invested
+  claimTxHash?: string; // Transaction hash of the claim
 }
 
 export default function ManageBet() {
@@ -741,10 +743,14 @@ export default function ManageBet() {
                             try {
                               setLoading(true);
                               const betPDA = new PublicKey(pool.address);
-                              await claimWinnings(betPDA);
+                              const txHash = await claimWinnings(betPDA);
 
-                              // Remove this pool from the list after successful claim
-                              setJoinedPools(prev => prev.filter(p => p.address !== pool.address));
+                              // Update pool with claim tx hash and mark as claimed
+                              setJoinedPools(prev => prev.map(p =>
+                                p.address === pool.address
+                                  ? { ...p, alreadyClaimed: true, claimTxHash: txHash }
+                                  : p
+                              ));
 
                               toast.success("Treasure claimed! 🎉");
                             } catch (error: any) {
@@ -752,8 +758,12 @@ export default function ManageBet() {
                               // Check if error is because already claimed
                               if (error?.message?.includes("already") || error?.message?.includes("claimed")) {
                                 toast.error("Already claimed!");
-                                // Remove from list anyway
-                                setJoinedPools(prev => prev.filter(p => p.address !== pool.address));
+                                // Mark as claimed without tx hash
+                                setJoinedPools(prev => prev.map(p =>
+                                  p.address === pool.address
+                                    ? { ...p, alreadyClaimed: true }
+                                    : p
+                                ));
                               }
                             } finally {
                               setLoading(false);
@@ -767,14 +777,24 @@ export default function ManageBet() {
                       )}
 
                       {didWin && pool.alreadyClaimed && (
-                        <div className="w-full mt-4 bg-gradient-to-r from-green-900/50 to-emerald-900/50 text-green-300 pixel-font rounded-xl p-4 text-center border-2 border-green-500/50">
-                          <p className="text-sm mb-2">✅ TREASURE CLAIMED</p>
-                          <p className="text-xs text-green-400">
-                            You won <span className="font-bold text-yellow-300">{pool.totalPool.toFixed(4)} SOL</span>!
-                          </p>
-                          <p className="text-[10px] text-gray-400 mt-1">
-                            Profit: +{(pool.totalPool - (pool.myDeposit || 0)).toFixed(4)} SOL
-                          </p>
+                        <div className="w-full mt-4 space-y-2">
+                          <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 text-green-300 pixel-font rounded-xl p-4 text-center border-2 border-green-500/50">
+                            <p className="text-sm mb-2">✅ TREASURE CLAIMED</p>
+                            <p className="text-xs text-green-400">
+                              You won <span className="font-bold text-yellow-300">{pool.totalPool.toFixed(4)} SOL</span>!
+                            </p>
+                            <p className="text-[10px] text-gray-400 mt-1">
+                              Profit: +{(pool.totalPool - (pool.myDeposit || 0)).toFixed(4)} SOL
+                            </p>
+                          </div>
+                          {pool.claimTxHash && (
+                            <button
+                              onClick={() => window.open(getExplorerUrl(pool.claimTxHash!), "_blank")}
+                              className="w-full bg-black/50 hover:bg-black/70 border-2 border-cyan-500/50 hover:border-cyan-500 text-cyan-300 hover:text-white pixel-font text-xs py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                            >
+                              🔍 VIEW CLAIM TRANSACTION
+                            </button>
+                          )}
                         </div>
                       )}
 

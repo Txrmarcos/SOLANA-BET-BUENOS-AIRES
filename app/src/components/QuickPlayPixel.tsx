@@ -10,7 +10,7 @@ import PixelDoor, { DoorState, TrapType } from "./pixel-dungeon/PixelDoor";
 import VictoryModal from "./pixel-dungeon/VictoryModal";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { getExplorerAddressUrl } from "@/lib/explorer";
+import { getExplorerAddressUrl, getExplorerUrl } from "@/lib/explorer";
 
 const TOTAL_BLOCKS = 25;
 const TRAP_TYPES: TrapType[] = ["arrow", "poison", "skeleton", "slime", "spikes", "curse"];
@@ -173,7 +173,7 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
     setLoading(true);
     try {
       const poolPDA = new PublicKey(activePool.address);
-      await joinBet(poolPDA, selectedBlock, parseFloat(depositAmount));
+      const txHash = await joinBet(poolPDA, selectedBlock, parseFloat(depositAmount));
 
       // Update state immediately
       setHasJoined(true);
@@ -181,7 +181,27 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
 
       // Then reload pool data to confirm
       await loadPoolData(activePool.address);
-      toast.success(`Entered dungeon with Door ${selectedBlock}! 🗝️`);
+
+      // Show success with transaction link
+      if (txHash) {
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span>Entered dungeon with Door {selectedBlock}! 🗝️</span>
+            <a
+              href={getExplorerUrl(txHash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🔍 View Transaction
+            </a>
+          </div>,
+          { duration: 8000 }
+        );
+      } else {
+        toast.success(`Entered dungeon with Door ${selectedBlock}! 🗝️`);
+      }
     } catch (error) {
       console.error(error);
       // Revert state on error
@@ -199,8 +219,29 @@ export default function QuickPlayPixel({ betAddress }: QuickPlayProps) {
     setLoading(true);
     try {
       const poolPDA = new PublicKey(activePool.address);
-      await claimWinnings(poolPDA);
-      toast.success("Treasure claimed! 💰");
+      const txHash = await claimWinnings(poolPDA);
+
+      // Show success with transaction link
+      if (txHash) {
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span>Treasure claimed! 💰</span>
+            <a
+              href={getExplorerUrl(txHash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🔍 View Transaction
+            </a>
+          </div>,
+          { duration: 8000 }
+        );
+      } else {
+        toast.success("Treasure claimed! 💰");
+      }
+
       closeVictory();
       await loadPoolData(activePool.address);
     } catch (error) {

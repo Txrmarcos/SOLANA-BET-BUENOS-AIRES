@@ -5,6 +5,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useBlockBattle } from "@/lib/useBlockBattle";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { betsCache } from "@/lib/betsCache";
+import { getExplorerUrl } from "@/lib/explorer";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -57,16 +58,45 @@ export default function CreateBet() {
         // Generate shareable URL
         const shareUrl = `${window.location.origin}?bet=${result.betPDA.toBase58()}`;
 
-        // Copy to clipboard
+        // Copy to clipboard and show success with transaction link
         try {
           await navigator.clipboard.writeText(shareUrl);
-          toast.success(`Bet created! Share link copied to clipboard!`);
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span>Dungeon created! Share link copied! 🏰</span>
+              <a
+                href={getExplorerUrl(result.tx)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
+                onClick={(e) => e.stopPropagation()}
+              >
+                🔍 View Transaction
+              </a>
+            </div>,
+            { duration: 8000 }
+          );
         } catch (err) {
-          toast.success(`Bet created! Share: ${result.betPDA.toBase58()}`);
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span>Dungeon created! Share: {result.betPDA.toBase58()}</span>
+              <a
+                href={getExplorerUrl(result.tx)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-300 hover:text-cyan-200 underline text-xs font-mono"
+                onClick={(e) => e.stopPropagation()}
+              >
+                🔍 View Transaction
+              </a>
+            </div>,
+            { duration: 8000 }
+          );
         }
 
         console.log("Bet created at:", result.betPDA.toBase58());
         console.log("Share URL:", shareUrl);
+        console.log("Transaction:", result.tx);
         setFormData({ minDeposit: "0.1", arbiter: "", lockTime: "300" });
       }
     } catch (error: any) {
