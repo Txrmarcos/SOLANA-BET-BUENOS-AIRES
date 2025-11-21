@@ -84,6 +84,7 @@ export default function ManageBet() {
 
   const isArbiter = betData && publicKey && betData.arbiter.toBase58() === publicKey.toBase58();
   const isCreator = betData && publicKey && betData.creator.toBase58() === publicKey.toBase58();
+  const isPlayer = betData && publicKey && betData.players.some((player: any) => player.toBase58() === publicKey.toBase58());
   const status = betData ? Object.keys(betData.status)[0] : null;
 
   if (!connected) {
@@ -175,63 +176,64 @@ export default function ManageBet() {
                   <p className="text-cyan-400 text-sm font-medium">✓ You created this bet</p>
                 </div>
               )}
+
+              {isPlayer && (
+                <div className="pt-4 border-t border-white/[0.06]">
+                  <p className="text-purple-400 text-sm font-medium">✓ You are a player in this bet</p>
+                </div>
+              )}
             </div>
 
             {/* Arbiter: Reveal Winner */}
             {isArbiter && status === 'open' && (
               <div className="space-y-4">
-                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6 text-center">
-                  <p className="text-[#A1A1AA] text-sm mb-2">Random Winning Block</p>
-                  {winningBlock !== null ? (
-                    <div className="text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent my-4">
-                      {winningBlock}
-                    </div>
-                  ) : (
-                    <div className="text-6xl font-bold text-[#71717A] my-4">
-                      ?
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      const random = Math.floor(Math.random() * TOTAL_BLOCKS) + 1;
-                      setWinningBlock(random);
-                    }}
-                    disabled={loading}
-                    className="flex-1 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {winningBlock !== null ? 'Regenerate' : 'Generate Random'}
-                  </button>
-                  {winningBlock !== null && (
+                <label className="block text-sm font-medium text-white mb-3">
+                  Select Winning Block
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {Array.from({ length: TOTAL_BLOCKS }, (_, i) => i + 1).map((block) => (
                     <button
-                      onClick={() => setWinningBlock(null)}
-                      disabled={loading}
-                      className="px-5 py-3 bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-[#A1A1AA] hover:text-white font-medium rounded-xl transition-all disabled:opacity-50"
+                      key={block}
+                      onClick={() => setWinningBlock(block)}
+                      className={`aspect-square rounded-xl font-bold text-lg transition-all ${
+                        winningBlock === block
+                          ? "bg-gradient-to-br from-purple-500 to-cyan-500 text-white scale-105 shadow-lg border border-purple-400/50"
+                          : "bg-white/[0.03] hover:bg-white/[0.06] text-[#A1A1AA] hover:text-white border border-white/[0.06] hover:border-purple-500/30"
+                      }`}
                     >
-                      Reset
+                      {block}
                     </button>
-                  )}
+                  ))}
                 </div>
                 <button
                   onClick={handleReveal}
                   disabled={loading || winningBlock === null}
                   className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
                 >
-                  {loading ? "Revealing..." : winningBlock ? `Reveal Block ${winningBlock} as Winner` : "Generate a random block first"}
+                  {loading ? "Revealing..." : winningBlock ? `Reveal Block ${winningBlock} as Winner` : "Select a Block"}
                 </button>
               </div>
             )}
 
             {/* Player: Claim Winnings */}
             {status === 'revealed' && (
-              <button
-                onClick={handleClaim}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
-              >
-                {loading ? "Claiming..." : "🏆 Claim Winnings"}
-              </button>
+              <>
+                {isPlayer ? (
+                  <button
+                    onClick={handleClaim}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30"
+                  >
+                    {loading ? "Claiming..." : "🏆 Claim Winnings"}
+                  </button>
+                ) : (
+                  <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
+                    <p className="text-[#A1A1AA] text-sm">
+                      You are not a player in this bet. Only players can claim winnings.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Creator: Cancel Bet */}

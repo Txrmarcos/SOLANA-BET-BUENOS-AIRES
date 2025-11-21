@@ -98,10 +98,7 @@ pub mod block_battle {
         require!(bet.status == BetStatus::Open, BetError::BetNotOpen);
         require!(bet.arbiter == arbiter.key(), BetError::UnauthorizedArbiter);
         require!(winning_block > 0 && winning_block <= TOTAL_BLOCKS, BetError::InvalidBlock);
-        require!(
-            Clock::get()?.unix_timestamp >= bet.lock_time,
-            BetError::BetNotLocked
-        );
+        // Arbiter can reveal at any time, no lock_time check needed
         require!(bet.player_count >= 2, BetError::NotEnoughPlayers);
 
         bet.winner_block = Some(winning_block);
