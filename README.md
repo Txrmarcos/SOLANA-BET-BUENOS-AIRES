@@ -97,6 +97,7 @@ Traditional betting platforms require trust in centralized operators. Block Batt
 ## 🚀 Live Demo
 
 ### Deployed Program
+- **Video Demo**: [View on YouTube](https://www.youtube.com/watch?v=PTynN_-ObuY)
 - **Program ID**: `EqzTrTYgAttzSmVbjpm6t6SBUVT5Ab2zWVTxaYDE9iBF`
 - **Network**: Solana Devnet
 - **Explorer**: [View on Solana Explorer](https://explorer.solana.com/address/EqzTrTYgAttzSmVbjpm6t6SBUVT5Ab2zWVTxaYDE9iBF?cluster=devnet)
